@@ -56,9 +56,21 @@ def add_chance(df: pd.DataFrame) -> pd.DataFrame:
     n = df["n_classes"].astype(float) if "n_classes" in df.columns else pd.Series(
         2.0, index=df.index
     )
+    known = {"roc_auc", "accuracy", "kappa", "pearson"}
+
+    def _metric(m, c) -> str:
+        # Files written before the metric column existed (MI, P300, motor
+        # execution) carry no metric. Infer the historical default rather than
+        # letting str(nan) fall through chance_level's kappa branch and report
+        # chance=0 for an ROC-AUC track.
+        text = str(m) if pd.notna(m) else ""
+        if text in known:
+            return text
+        return "roc_auc" if float(c) <= 2 else "accuracy"
+
     if "metric" in df.columns:
         df["chance"] = [
-            chance_level(str(m), int(c)) for m, c in zip(df["metric"], n)
+            chance_level(_metric(m, c), int(c)) for m, c in zip(df["metric"], n)
         ]
     else:
         df["chance"] = [0.5 if c <= 2 else 1.0 / c for c in n]

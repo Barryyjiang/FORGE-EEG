@@ -39,12 +39,12 @@ reproducible with the commands in `README.md`.
 
 | protocol | pipeline | score_mean | score_sem | chance | itr_bpm |
 |---|---|---|---|---|---|
-| cross_session | csp_lda | 0.817 | 0.039 | 0.000 | — |
-| cross_session | logvar_lda | 0.749 | 0.040 | 0.000 | — |
-| cross_session | riemann_tslr | 0.860 | 0.031 | 0.000 | — |
-| within_session | csp_lda | 0.829 | 0.037 | 0.000 | — |
-| within_session | logvar_lda | 0.775 | 0.038 | 0.000 | — |
-| within_session | riemann_tslr | 0.871 | 0.032 | 0.000 | — |
+| cross_session | csp_lda | 0.817 | 0.039 | 0.500 | — |
+| cross_session | logvar_lda | 0.749 | 0.040 | 0.500 | — |
+| cross_session | riemann_tslr | 0.860 | 0.031 | 0.500 | — |
+| within_session | csp_lda | 0.829 | 0.037 | 0.500 | — |
+| within_session | logvar_lda | 0.775 | 0.038 | 0.500 | — |
+| within_session | riemann_tslr | 0.871 | 0.032 | 0.500 | — |
 
 | protocol | pipeline | subset | k | score_mean | score_sem | delta_vs_full | itr_bpm |
 |---|---|---|---|---|---|---|---|
