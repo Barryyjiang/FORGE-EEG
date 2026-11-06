@@ -1,0 +1,3 @@
+track,pipeline,subject,metric,n_classes,real,perm_mean,perm_sd,gap
+motor_execution_ear_vs_scalp,riemann_tslr,1,roc_auc,2,0.9631944444444445,0.5332118055555556,0.04375651337648502,0.4299826388888889
+motor_execution_ear_vs_scalp,riemann_tslr,2,roc_auc,2,0.6796875,0.49566406249999995,0.06473799499216414,0.18402343750000005

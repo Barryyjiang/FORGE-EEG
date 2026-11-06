@@ -1,0 +1,2 @@
+track,pipeline,subject,metric,n_classes,real,perm_mean,perm_sd,gap
+p300_8ch,xdawn_tslr,1,roc_auc,2,0.8227591836734695,0.5002382653061224,0.016744860001635883,0.3225209183673471

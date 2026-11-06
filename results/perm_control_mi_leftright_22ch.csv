@@ -1,0 +1,2 @@
+track,pipeline,subject,metric,n_classes,real,perm_mean,perm_sd,gap
+mi_leftright_22ch,riemann_tslr,1,roc_auc,2,0.9571683370137591,0.5090270935960591,0.0641774086289842,0.4481412434177

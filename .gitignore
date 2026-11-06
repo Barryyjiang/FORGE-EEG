@@ -1,0 +1,25 @@
+# Environment
+.venv/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# Vendored clones (separate git repos, pinned commits in SETUP.md)
+vendor/
+
+# Results are regenerable; summaries are cheap to recompute.
+# These small inputs are kept because scripts/build_site.py reads them.
+results/*.csv
+!results/perm_control_*.csv
+!results/signal_quality_bnci.csv
+!results/channel_diagnostics_beta.csv
+results/*.png
+
+# Large re-downloadable caches — all redirected into ./data by eegbench.paths
+/data/
+/mne_data/
+*.fif
+*.h5
+
+# Local screenshots used while reviewing the site
+docs/_*.png

@@ -1,0 +1,2 @@
+score,pipeline,subset,strategy,k,n_classes,subject,session,protocol,metric,trial_seconds,track,dataset_key,channels
+0.4,riemann_tslr,all_eeg_k28,full,28,4,1,0,within_session,accuracy,2.0,cvep_local,castillos_cvep40,"Fp1,Fz,F3,F7,FC5,FC1,C3,T7,CP5,CP1,Pz,P3,P7,O1,Oz,O2,P8,P4,CP2,CP6,T8,C4,Cz,FC2,FC6,F8,F4,Fp2"

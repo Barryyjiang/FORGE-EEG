@@ -1,0 +1,16 @@
+score,pipeline,subset,strategy,k,n_classes,subject,session,protocol,metric,trial_seconds,track,dataset_key,channels,accuracy
+0.7550056815290945,bandpower_lda,scalp_6_k6,region,6,5,001,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"C3,O1,F3,C4,O2,F4",0.8315334773218143
+0.7319630108273867,bandpower_lda,ear_6_k6,wearable,6,5,001,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELB,ELG,ELK,ERB,ERG,ERK",0.816414686825054
+0.7562048606156961,bandpower_lda,ear_13_k14,wearable,14,5,001,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELA,ELE,ELI,ERA,ERG,ERE,ERI,ELB1,ELB,ELG,ELK,ERB,ERK,ERB1",0.8326133909287257
+0.4227461492379705,bandpower_lda,scalp_6_k6,region,6,5,002,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"C3,O1,F3,C4,O2,F4",0.6072961373390557
+0.3886929448273876,bandpower_lda,ear_6_k6,wearable,6,5,002,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELB,ELG,ELK,ERB,ERG,ERK",0.5847639484978541
+0.40889548866330894,bandpower_lda,ear_13_k14,wearable,14,5,002,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELA,ELE,ELI,ERA,ERG,ERE,ERI,ELB1,ELB,ELG,ELK,ERB,ERK,ERB1",0.5976394849785408
+0.3332854974055304,bandpower_lda,scalp_6_k6,region,6,5,003,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"C3,O1,F3,C4,O2,F4",0.5192532088681447
+0.24902571197970713,bandpower_lda,ear_6_k6,wearable,6,5,003,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELB,ELG,ELK,ERB,ERG,ERK",0.4679113185530922
+0.3201657730522234,bandpower_lda,ear_13_k14,wearable,14,5,003,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELA,ELE,ELI,ERA,ERG,ERE,ERI,ELB1,ELB,ELG,ELK,ERB,ERK,ERB1",0.5110851808634772
+0.38129509093154124,bandpower_lda,scalp_6_k6,region,6,5,004,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"C3,O1,F3,C4,O2,F4",0.628695652173913
+0.3444067269570624,bandpower_lda,ear_6_k6,wearable,6,5,004,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELB,ELG,ELK,ERB,ERG,ERK",0.6173913043478261
+0.34953740855600024,bandpower_lda,ear_13_k14,wearable,14,5,004,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELA,ELE,ELI,ERA,ERG,ERE,ERI,ELB1,ELB,ELG,ELK,ERB,ERK,ERB1",0.62
+0.7019398584754106,bandpower_lda,scalp_6_k6,region,6,6,005,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"C3,O1,F3,C4,O2,F4",0.7855769230769231
+0.6517843585873595,bandpower_lda,ear_6_k6,wearable,6,6,005,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELB,ELG,ELK,ERB,ERG,ERK",0.7519230769230769
+0.6570852244074634,bandpower_lda,ear_13_k14,wearable,14,6,005,001,within_session,kappa,30.0,sleep_staging_local,openneuro_ds004348,"ELA,ELE,ELI,ERA,ERG,ERE,ERI,ELB1,ELB,ELG,ELK,ERB,ERK,ERB1",0.7548076923076923

@@ -1,0 +1,2 @@
+track,pipeline,subject,metric,n_classes,real,perm_mean,perm_sd,gap
+ssvep_8ch,ssvep_cca,1,accuracy,12,0.6888888888888889,0.07666666666666666,0.019452379333346217,0.6122222222222222
