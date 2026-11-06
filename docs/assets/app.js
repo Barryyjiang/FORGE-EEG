@@ -2351,6 +2351,14 @@
   // ------------------------------------------------------------- controls
   function renderControls() {
     const rows = DATA.controls || [];
+    const order = {
+      mi_leftright_22ch: 1,
+      p300_8ch: 2,
+      ssvep_8ch: 3,
+      motor_execution_ear_vs_scalp: 4,
+      sleep_staging_local: 5,
+    };
+    rows.sort((a, b) => (order[a.track] || 99) - (order[b.track] || 99));
     const labels = {
       mi_leftright_22ch: "Motor imagery",
       p300_8ch: "P300",

@@ -27,14 +27,10 @@ Useful query parameters while editing:
 
 ## Publish it
 
-The repository root is not a git checkout yet. From the project root:
+This directory is already a git checkout with an initial commit. Create an
+empty repository on GitHub, then from the project root:
 
 ```powershell
-git init
-git add .
-git commit -m "Add EEG wearable benchmark site"
-
-# create an empty repository on GitHub first, then:
 git remote add origin https://github.com/<you>/<repo>.git
 git branch -M main
 git push -u origin main
