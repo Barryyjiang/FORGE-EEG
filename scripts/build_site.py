@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import json
 import math
-import re
 from datetime import date
 from pathlib import Path
 
@@ -522,8 +521,11 @@ def _controls() -> list[dict]:
                 "n_controls": int(len(g)),
             })
 
+    frame = pd.DataFrame(rows)
+    if frame.empty:
+        return []
     out = []
-    for track, g in pd.DataFrame(rows).groupby("track"):
+    for track, g in frame.groupby("track"):
         out.append({
             "track": track,
             "metric": g["metric"].iloc[0],
