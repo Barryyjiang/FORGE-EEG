@@ -1,15 +1,14 @@
-"""Electrode montages: scalp regions and wearable layouts.
+"""Electrode montages: scalp regions and measured wearable layouts.
 
-The `fidelity` field is the important one. It records how much we trust that the
-electrode names correspond to a real device:
+The `fidelity` field records how much we trust that the electrode names
+correspond to a real device:
 
 - ``measured``  electrodes of a real device, as published/documented
-- ``proxy``     nearest standard 10-10 positions standing in for a device whose
-                electrodes are not in the standard nomenclature (e.g. cEEGrid,
-                in-ear cups). Good for geometry, NOT a claim about the device.
 - ``synthetic`` invented layout for ablation only
 
-Never report a ``proxy`` result as "accuracy of device X".
+Only measured wearable montages belong in the benchmark. A nearest-10-10 ring
+is a geometry experiment, not a measurement of the device, and mixing the two
+makes a result impossible to interpret.
 """
 
 from __future__ import annotations
@@ -24,6 +23,52 @@ from .names import normalize_name
 
 Fidelity = Literal["measured", "proxy", "synthetic"]
 Kind = Literal["region", "wearable", "full"]
+
+#: Schematic positions for ear electrodes, normalised to the head circle
+#: (x = left/right, y = front/back, origin at the centre of the head).
+#:
+#: These labels are not in the 10-5 nomenclature — ``cEL1`` is a wet electrode on
+#: a C-shaped holder, not a scalp site — so they are drawn and subset from this
+#: table rather than looked up in MNE's montage. The values are schematic: enough
+#: to pick a spatially spread subset and draw a head map, not a claim about where
+#: the electrodes actually sat. The released Ear-SAAD data ships no coordinates.
+EAR_POSITIONS: dict[str, tuple[float, float]] = {
+    # Wu2020: four per ear (front, back, outer-upper, outer-down)
+    "LF": (-0.98, 0.16), "LB": (-0.98, -0.10),
+    "LOU": (-1.06, 0.07), "LOD": (-1.06, -0.02),
+    "RF": (0.98, 0.16), "RB": (0.98, -0.10),
+    "ROU": (1.06, 0.07), "ROD": (1.06, -0.02),
+    # ds004348: seven per ear, arranged around the ear
+    "ELA": (-0.94, 0.20), "ELE": (-1.02, 0.15), "ELI": (-1.07, 0.06),
+    "ELB1": (-1.07, -0.03), "ELB": (-1.03, -0.12), "ELG": (-0.96, -0.19),
+    "ELK": (-0.88, -0.24),
+    "ERA": (0.94, 0.20), "ERE": (1.02, 0.15), "ERI": (1.07, 0.06),
+    "ERB1": (1.07, -0.03), "ERB": (1.03, -0.12), "ERG": (0.96, -0.19),
+    "ERK": (0.88, -0.24),
+    # Ear-SAAD in-ear: six per ear on the custom earpieces. ELC/ELT/ERC/ERT are
+    # the four this dataset has that ds004348 does not.
+    "ELC": (-1.06, -0.03), "ELT": (-0.95, -0.20),
+    "ERC": (1.06, -0.03), "ERT": (0.95, -0.20),
+}
+
+#: Ear-SAAD around-ear: 19 wet electrodes on a C-shaped holder, 9 left and 10
+#: right, placed on an arc hugging the outside of each ear.
+for _i in range(1, 10):
+    _deg = 110.0 + (250.0 - 110.0) * (_i - 1) / 8.0
+    EAR_POSITIONS[f"cEL{_i}"] = (
+        round(-1.0 + 0.20 * np.cos(np.radians(_deg)), 4),
+        round(0.20 * np.sin(np.radians(_deg)), 4),
+    )
+for _i in range(1, 11):
+    _deg = 70.0 - (70.0 + 70.0) * (_i - 1) / 9.0
+    EAR_POSITIONS[f"cER{_i}"] = (
+        round(1.0 + 0.20 * np.cos(np.radians(_deg)), 4),
+        round(0.20 * np.sin(np.radians(_deg)), 4),
+    )
+
+#: Head radius in metres, used to lift the schematic ear coordinates into the
+#: same units as the 10-5 montage so the two can be compared and mixed.
+_HEAD_RADIUS_M = 0.09
 
 
 @dataclass(frozen=True)
@@ -95,58 +140,16 @@ REGIONS: dict[str, Montage] = {
 # --------------------------------------------------------------------------
 
 WEARABLES: dict[str, Montage] = {
-    # Commercial, documented electrode positions.
-    "muse2": Montage(
-        "muse2",
-        ("TP9", "AF7", "AF8", "TP10"),
-        "wearable",
-        "measured",
-        "InteraXon Muse 2 / Muse S. 4 dry electrodes, forehead + behind ears.",
-    ),
-    # A published, optimised 8-channel montage used in a real study.
-    "thielen2021": Montage(
-        "thielen2021",
-        ("Fpz", "Iz", "O1", "O2", "Oz", "POz", "T7", "T8"),
-        "wearable",
-        "measured",
-        "Thielen et al. 2021 c-VEP montage, optimised by Ahmadi et al. 2019. "
-        "This is the strongest available 'subset beats a region' exemplar.",
-    ),
-    # Around-the-ear devices. cEEGrid electrodes are not in the 10-10
-    # nomenclature, so these are the nearest ring of standard positions.
-    "ceegrid_proxy": Montage(
-        "ceegrid_proxy",
-        ("FT9", "T7", "TP7", "TP9", "FT10", "T8", "TP8", "TP10"),
-        "wearable",
-        "proxy",
-        "Nearest 10-10 ring approximating a cEEGrid (8 of the 20 electrodes). "
-        "Geometry proxy only; cEEGrid is a flex-printed ear-adjacent array.",
-    ),
-    # Ear-EEG recorded simultaneously with a dense scalp cap: ground truth,
-    # not a proxy, for the "does the wearable sit over the wrong cortex"
-    # question.
+    # Ear-EEG recorded simultaneously with a dense scalp cap: ground truth for
+    # the "does the wearable sit over the wrong cortex" question.
     "wu2020_inear": Montage(
         "wu2020_inear",
         ("LF", "LB", "LOU", "LOD", "RF", "RB", "ROU", "ROD"),
         "wearable",
         "measured",
         "In-ear electrodes, Wu et al. 2020 (4 per ear: front, back, "
-        "outer-upper, outer-down), recorded at the same time as a 122-channel "
-        "scalp cap.",
-    ),
-    "earbud_proxy": Montage(
-        "earbud_proxy",
-        ("T7", "T8", "TP9", "TP10"),
-        "wearable",
-        "proxy",
-        "Minimal in-ear / earbud proxy. Poorest expected SNR of the set.",
-    ),
-    "headband_proxy": Montage(
-        "headband_proxy",
-        ("Fp1", "Fp2", "AF7", "AF8"),
-        "wearable",
-        "proxy",
-        "Frontal dry headband / sleep-band proxy.",
+        "outer-upper, outer-down), recorded at the same time as a 115-channel "
+        "scalp EEG cap.",
     ),
 }
 
@@ -194,16 +197,26 @@ def standard_positions() -> dict[str, np.ndarray]:
 
 
 def positions_for(ch_names: list[str]) -> dict[str, np.ndarray]:
-    """Positions for the channels that exist in the standard 1005 montage.
+    """Positions for the channels the benchmark can place.
 
-    Matching is case-insensitive: datasets spell the same electrode ``Ft7`` and
-    ``FT7``, and dropping the former silently shrinks the geometric subset.
+    Scalp names come from MNE's 10-5 montage. Matching there is case-insensitive:
+    datasets spell the same electrode ``Ft7`` and ``FT7``, and dropping the former
+    silently shrinks the geometric subset.
+
+    Ear labels (``cEL1``, ``ELA``, ``LF`` …) are not in the nomenclature, so they
+    fall back to the schematic :data:`EAR_POSITIONS` table, lifted into the same
+    units as the scalp montage. That is what lets a farthest-point subset span an
+    ear array at all; the coordinates are schematic, not measured.
     """
     all_pos = standard_positions()
     normalised = {normalize_name(name): xyz for name, xyz in all_pos.items()}
     found: dict[str, np.ndarray] = {}
     for ch in ch_names:
         xyz = normalised.get(normalize_name(ch))
+        if xyz is None:
+            xy = EAR_POSITIONS.get(ch)
+            if xy is not None:
+                xyz = np.array([xy[0], xy[1], 0.0]) * _HEAD_RADIUS_M
         if xyz is not None:
             found[ch] = xyz
     return found

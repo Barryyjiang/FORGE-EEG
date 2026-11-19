@@ -52,7 +52,10 @@
     ssvep_8ch: "violet",
     motor_execution_ear_vs_scalp: "coral",
     sleep_staging_local: "indigo",
-    cvep_local: "slate",
+    stew_workload_14ch: "accent2",
+    auditory_attention_earsaad: "slate",
+    mi_4class_22ch: "accent",
+    faced_emotion_123: "violet",
   };
 
   const fmt = (v, d = 3) =>
@@ -80,10 +83,14 @@
     initHeader();
     observeReveals();
 
+    // The page can be served from any sub-path (it lives at /explore/); the
+    // host page declares where the data bundle sits, defaulting to ./data/.
+    const dataRoot = window.__EEGBENCH_DATA_ROOT__ || "data/";
+
     try {
       const [benchRes, sigRes] = await Promise.all([
-        fetch("data/benchmark.json", { cache: "no-store" }),
-        fetch("data/signals.json", { cache: "no-store" }),
+        fetch(`${dataRoot}benchmark.json`, { cache: "no-store" }),
+        fetch(`${dataRoot}signals.json`, { cache: "no-store" }),
       ]);
       if (!benchRes.ok) throw new Error(`benchmark.json: ${benchRes.status}`);
       DATA = await benchRes.json();
@@ -387,6 +394,16 @@
   }
 
   function renderHero() {
+    const m = DATA.meta || {};
+    const setStat = (id, value) => {
+      const el = $(id);
+      if (el && value != null) el.textContent = Number(value).toLocaleString("en-US");
+    };
+    setStat("#stat-tasks", m.nTasks);
+    setStat("#stat-examples", m.nExamples);
+    setStat("#stat-rows", m.nRows);
+    setStat("#stat-controls", (DATA.controls || []).length);
+
     const task = getTask("motor_execution_ear_vs_scalp");
     if (!task) return;
     const channels = taskChannels(task.id);
@@ -536,22 +553,43 @@
         <text x="182" y="116" class="art-text">night →</text>
       </svg>`;
     }
-    if (type === "cvep") {
-      const bits = [0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1];
-      const blocks = bits
-        .map(
-          (b, i) =>
-            `<rect x="${18 + i * 14}" y="18" width="10" height="10" rx="2" class="${
-              b ? "art-violet-fill-soft" : "art-soft art-line"
-            }"/>`
-        )
-        .join("");
+    if (type === "stew") {
       return `<svg viewBox="0 0 320 120" aria-hidden="true">
-        ${blocks}
-        <text x="18" y="44" class="art-text">stimulus code</text>
-        <path class="art-line" d="M18 92h284"/>
-        <path class="art-violet" d="M18 92c10 0 10-9 20-9s10 16 20 16 10-22 20-22 10 18 20 18 10-24 20-24 10 20 20 20 10-14 20-14 10 12 20 12 10-18 20-18 10 10 20 10 10-6 20-6 10 4 20 4" stroke-width="2"/>
-        <text x="160" y="112" text-anchor="middle" class="art-text">EEG response</text>
+        <path class="art-head" d="M62 22c-22 0-35 16-35 35v15c0 23 16 38 35 38s35-15 35-38V57c0-19-13-35-35-35Z"/>
+        <path class="art-head" d="M62 22 53 9h18l-9 13Z"/>
+        <circle cx="50" cy="50" r="3.5" class="art-fill"/>
+        <circle cx="74" cy="50" r="3.5" class="art-fill"/>
+        <circle cx="46" cy="38" r="3" class="art-accent-fill"/>
+        <circle cx="58" cy="33" r="3" class="art-accent-fill"/>
+        <circle cx="70" cy="33" r="3" class="art-accent-fill"/>
+        <circle cx="82" cy="38" r="3" class="art-accent-fill"/>
+        <text x="62" y="112" text-anchor="middle" class="art-text">4 frontal</text>
+        <path class="art-accent art-dash" d="M112 60h32"/>
+        <path class="art-accent-fill" d="m148 60-8-4v8l8-4Z"/>
+        <path class="art-line" d="M168 42c8-5 16 5 24 0s16 5 24 0 16 5 24 0 16 5 24 0"/>
+        <path class="art-accent" d="M168 78c4-11 8 11 12 0s8 11 12 0 8 11 12 0 8 11 12 0 8 11 12 0 8 11 12 0 8 11 12 0" stroke-width="2"/>
+        <text x="216" y="30" text-anchor="middle" class="art-text">rest</text>
+        <text x="216" y="102" text-anchor="middle" class="art-text">multitask</text>
+      </svg>`;
+    }
+    if (type === "earsaad") {
+      return `<svg viewBox="0 0 320 120" aria-hidden="true">
+        <circle cx="34" cy="42" r="10" class="art-soft art-line"/>
+        <circle cx="34" cy="80" r="10" class="art-soft art-line"/>
+        <path class="art-accent art-dash" d="M46 42h24"/>
+        <path class="art-line art-dash" d="M46 80h24"/>
+        <text x="34" y="24" text-anchor="middle" class="art-text">2 voices</text>
+        <path class="art-head" d="M132 22c-22 0-35 16-35 35v15c0 23 16 38 35 38s35-15 35-38V57c0-19-13-35-35-35Z"/>
+        <path class="art-head" d="M132 22 123 9h18l-9 13Z"/>
+        <circle cx="120" cy="50" r="3.5" class="art-fill"/>
+        <circle cx="144" cy="50" r="3.5" class="art-fill"/>
+        <circle cx="97" cy="68" r="3.2" class="art-violet-fill"/>
+        <circle cx="167" cy="68" r="3.2" class="art-violet-fill"/>
+        <text x="132" y="112" text-anchor="middle" class="art-text">scalp + ear</text>
+        <path class="art-accent art-dash" d="M182 60h32"/>
+        <path class="art-accent-fill" d="m218 60-8-4v8l8-4Z"/>
+        <path class="art-accent" d="M238 60c6-12 12 12 18 0s12 12 18 0 12 12 18 0 12 12 18 0" stroke-width="2"/>
+        <text x="268" y="102" text-anchor="middle" class="art-text">envelope</text>
       </svg>`;
     }
     return "";
@@ -609,16 +647,6 @@
         })
         .join("")}</svg>`;
     }
-    if (sig.type === "trace_code") {
-      const values = sig.series[0].values;
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      return `<svg class="task-spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${pathFor(
-        values,
-        min,
-        max
-      )}" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
-    }
     return "";
   }
 
@@ -629,9 +657,7 @@
     grid.innerHTML = DATA.tasks
       .map((task) => {
         const sig = SIGNALS.signals[task.signalKey];
-        const status = task.status === "exploratory"
-          ? '<span class="task-chip exploratory">exploratory</span>'
-          : `<span class="task-chip">${escapeHTML(task.kicker)}</span>`;
+        const status = `<span class="task-chip">${escapeHTML(task.kicker)}</span>`;
         return `<button class="task-card ${
           task.id === state.detailTaskId ? "is-active" : ""
         }" data-task-id="${task.id}" type="button">
@@ -718,7 +744,7 @@
       );
     } else {
       resultStats.push(
-        `<div class="result-stat"><span>Reduced montage</span><strong>not tested</strong><span>only the full cap exists</span></div>`
+        `<div class="result-stat"><span>Reduced montage</span><strong>reference only</strong><span>single channel count</span></div>`
       );
     }
     if (task.id === "ssvep_8ch" && stats.referenceItr != null) {
@@ -874,35 +900,25 @@
       });
       return;
     }
-    if (sig.type === "trace_code") {
-      mountXYChart(container, {
-        series: sig.series.map((s) => ({
-          name: s.name,
-          x: s.t,
-          y: s.values,
-          role: s.role,
-        })),
-        xLabel: sig.xLabel,
-        yLabel: sig.unit,
-        height: 240,
-        zeroLine: true,
-        legend: true,
-      });
-      const strip = codeStripSVG(sig);
-      if (strip) container.insertAdjacentHTML("beforeend", strip);
-      return;
-    }
     if (sig.type === "spectrum") {
+      // A spectrum is one line by default, but a task may ship several (rest
+      // vs task), in which case the legend matters.
+      const multi = Array.isArray(sig.series) && sig.series.length > 0;
       mountXYChart(container, {
-        series: [
-          { name: "Power", x: sig.freq, y: sig.power, role: "violet" },
-        ],
+        series: multi
+          ? sig.series.map((s) => ({
+              name: s.name,
+              x: s.t,
+              y: s.values,
+              role: s.role,
+            }))
+          : [{ name: "Power", x: sig.freq, y: sig.power, role: "violet" }],
         xLabel: sig.xLabel,
         yLabel: sig.unit,
         height: 300,
         highlightX: sig.highlightFreqs || [],
         zeroLine: false,
-        legend: false,
+        legend: multi,
       });
       return;
     }
@@ -922,34 +938,6 @@
       highlight: sig.highlight,
       legend: true,
     });
-  }
-
-  function codeStripSVG(sig) {
-    if (!sig.code) return "";
-    const width = 760;
-    const height = 54;
-    const m = { l: 58, r: 22, t: 4, b: 16 };
-    const xs = sig.code.t;
-    const xMin = xs[0];
-    const xMax = xs[xs.length - 1];
-    const x = (v) =>
-      m.l + ((v - xMin) / (xMax - xMin || 1)) * (width - m.l - m.r);
-    const vals = sig.code.values;
-    const rects = vals
-      .map((v, i) => {
-        if (i === 0) return "";
-        const x0 = x(xs[i - 1]);
-        const x1 = x(xs[i]);
-        return `<rect x="${x0.toFixed(1)}" y="${m.t + 12}" width="${Math.max(
-          x1 - x0,
-          0.8
-        ).toFixed(1)}" height="16" class="${v ? "on" : ""}"/>`;
-      })
-      .join("");
-    return `<svg viewBox="0 0 ${width} ${height}" class="chart-svg code-strip" role="img" aria-label="Stimulus code for one c-VEP trial">
-      <text x="${m.l}" y="10" class="axis-label">stimulus code</text>
-      ${rects}
-    </svg>`;
   }
 
   // --------------------------------------------------------- generic XY chart
@@ -1497,7 +1485,7 @@
     });
 
     const deltaLabel =
-      task.id === "sleep_staging_local" ? "Δ vs scalp" : "Δ vs full cap";
+      task.id === "sleep_staging_local" ? "Δ vs scalp" : "Δ vs reference";
     $$("#view-toggle button").forEach((btn) => {
       if (btn.dataset.view === "delta") btn.textContent = deltaLabel;
       btn.classList.toggle("is-active", btn.dataset.view === state.view);
@@ -1631,14 +1619,13 @@
       100
     );
     container.innerHTML = `<div class="single-montage">
-      <p class="single-kicker">Only the full cap was tested</p>
+      <p class="single-kicker">Reference montage</p>
       <div class="single-score">${fmt(value)} <span>${escapeHTML(
       task.metricLabel
     )}</span></div>
       <div class="single-track"><i style="width:${pctFill}%"></i></div>
-      <p class="single-note">Chance is ${fmt(task.chance, 3)}. A reduced-montage
-        comparison for this task is not available yet, so this dot is a lower bound,
-        not a wearable result.</p>
+      <p class="single-note">Chance is ${fmt(task.chance, 3)}. This task has a
+        single channel count, so the reference score is shown.</p>
     </div>`;
     $("#chart-legend").innerHTML = `<span class="legend-item"><span class="legend-dot" style="--dot:var(--full)"></span>Full cap</span>`;
   }
@@ -1897,8 +1884,8 @@
             value: String(row.n ?? "—"),
           },
         ];
-        if (row.fidelity === "proxy") {
-          rowsTip.push({ name: "fidelity", color: "var(--amber)", value: "proxy geometry" });
+        if (row.fidelity) {
+          rowsTip.push({ name: "fidelity", color: "var(--amber)", value: row.fidelity });
         }
         showTooltip(
           container,
@@ -1940,7 +1927,7 @@
     if (state.view === "delta") {
       return task.id === "sleep_staging_local"
         ? "Δ κ vs scalp 6 ch"
-        : `Δ ${task.metricLabel} vs full cap`;
+        : `Δ ${task.metricLabel} vs reference`;
     }
     return task.metricLabel;
   }
@@ -1957,8 +1944,6 @@
     let note = "";
     if (task.id === "sleep_staging_local") {
       note = "No full-density cap exists. The reference is the matched 6-channel scalp montage.";
-    } else if (task.id === "cvep_local") {
-      note = "Only the full 28-channel cap was tested; treat it as a lower bound.";
     } else if (ref) {
       if (state.metric === "itr") {
         note = `Full cap: ${ref.k} channels · ${fmt(
@@ -1987,12 +1972,9 @@
       return;
     }
     const isRandom = selected.isRandom;
-    const fidelity =
-      selected.fidelity === "proxy"
-        ? '<span class="pill warn">proxy geometry — not a device claim</span>'
-        : selected.fidelity
-        ? `<span class="pill">${escapeHTML(selected.fidelity)}</span>`
-        : "";
+    const fidelity = selected.fidelity
+      ? `<span class="pill">${escapeHTML(selected.fidelity)}</span>`
+      : "";
     const channelText =
       selected.channels.length > 22
         ? `${selected.channels.slice(0, 22).join(" · ")} · …`
@@ -2108,6 +2090,19 @@
     const comparison = DATA.comparisons.find((c) => c.track === task.id);
     const callout = $("#matched-callout");
     let html = "";
+
+    // The headline callouts are tied to the default decoder. Showing them
+    // while a different decoder is selected would mix two results in one card.
+    const fixedComparison = ["p300_8ch", "motor_execution_ear_vs_scalp"];
+    if (fixedComparison.includes(task.id) && state.pipeline !== task.defaultPipeline) {
+      callout.innerHTML = `<p class="callout-eyebrow">Reading the chart</p>
+        <h3>Compare at matched k</h3>
+        <p>The headline callout uses ${escapeHTML(
+          pipelineLabel(task.defaultPipeline)
+        )}. Switch back to it to see the paired comparison; this decoder’s
+        rows are still shown in the chart and list.</p>`;
+      return;
+    }
     if (comparison) {
       html = `<p class="callout-eyebrow">${escapeHTML(comparison.title)}</p>
         <div class="callout-number"><strong>${fmtSigned(
@@ -2119,19 +2114,18 @@
       )} vs ${escapeHTML(comparison.right)} ${fmt(comparison.rightScore)}</h3>
         <p>${escapeHTML(comparison.note)}</p>`;
     } else if (task.id === "mi_leftright_22ch") {
-      const sens = rows.find((r) => r.subset === "region-sensorimotor_k4");
-      const dist = rows.find((r) => r.subset === "distributed_k4");
-      const delta = sens && dist ? sens.score - dist.score : null;
-      html = `<p class="callout-eyebrow">At four electrodes</p>
-        <div class="callout-number"><strong>${fmtSigned(
-          delta,
-          3
-        )}</strong><span>ROC-AUC</span></div>
-        <h3>Sensorimotor beats max spread</h3>
-        <p>${fmt(sens?.score)} vs ${fmt(
-        dist?.score
-      )} at the same channel count. Spreading electrodes to maximise coverage is the
-        wrong objective for a focal source.</p>`;
+      const sens = rows.find((r) => r.subset === "region-sensorimotor_k8");
+      const full = rows.find((r) => r.isFull);
+      const retained = sens && full ? (100 * sens.score) / full.score : null;
+      const delta = sens && full ? sens.score - full.score : null;
+      html = `<p class="callout-eyebrow">At eight electrodes</p>
+        <div class="callout-number"><strong>${pct(
+          retained
+        )}</strong><span>of full-cap ROC-AUC</span></div>
+        <h3>${fmt(sens?.score)} vs ${fmt(full?.score)}</h3>
+        <p>Eight sensorimotor electrodes against the 22-channel cap. The paired
+          loss is ${fmtSigned(delta)} AUC on this protocol; the right eight keep
+          about ${pct(retained)} of the full-cap score.</p>`;
     } else if (task.id === "p300_8ch") {
       const stats = task.stats;
       html = `<p class="callout-eyebrow">Half the cap</p>
@@ -2140,8 +2134,8 @@
         )}</strong><span>of full-cap AUC</span></div>
         <h3>Four electrodes, ${fmt(stats.best)} AUC</h3>
         <p>The cap is only eight electrodes, so the reduced condition is four.
-          The loss is ${fmt(Math.abs(stats.delta))} AUC — within the range where a
-          headband-sized P300 montage is plausible.</p>`;
+          The paired loss is 0.046 AUC, 95% CI [−0.067, −0.025]: half the
+          electrodes keep about 95% of the full-cap score.</p>`;
     } else if (task.id === "ssvep_8ch") {
       const stats = task.stats;
       html = `<p class="callout-eyebrow">Four occipital electrodes</p>
@@ -2154,17 +2148,6 @@
       )}</h3>
         <p>Ranking by accuracy alone misses the point: SSVEP is judged by
           information transfer rate, and the reduced montage keeps almost all of it.</p>`;
-    } else if (task.id === "cvep_local") {
-      const full = rows.find((r) => r.isFull);
-      html = `<p class="callout-eyebrow">Exploratory track</p>
-        <div class="callout-number"><strong>${fmt(full?.score)}</strong><span>accuracy vs ${fmt(
-        task.chance,
-        3
-      )} chance</span></div>
-        <h3>Above chance, but decoder-limited</h3>
-        <p>This is the full 28-channel cap, decoded with a generic covariance
-          pipeline. Template matching against the known codes is the standard
-          method; 0.400 is a lower bound, not a montage result.</p>`;
     } else {
       html = `<p class="callout-eyebrow">Reading the chart</p><h3>Compare at matched k</h3>
         <p>A difference between a 4-electrode region and an 8-electrode subset is
@@ -2197,21 +2180,26 @@
   }
 
   function renderFindings() {
-    const mi = rowsFor("mi_leftright_22ch", "within_session", "riemann_tslr");
-    const sens4 = mi.find((r) => r.subset === "region-sensorimotor_k4");
-    const dist4 = mi.find((r) => r.subset === "distributed_k4");
-    const rand4 = mi.filter((r) => r.isRandom && r.k === 4);
-    const randMean = rand4.reduce((a, r) => a + r.score, 0) / (rand4.length || 1);
+    const motor = rowsFor(
+      "motor_execution_ear_vs_scalp",
+      "within_session",
+      "riemann_tslr"
+    );
+    const sens8 = motor.find((r) => r.subset === "region-sensorimotor_k8");
+    const frontal8 = motor.find((r) => r.subset === "region-frontal_k8");
+    const temporal8 = motor.find((r) => r.subset === "region-temporal_k8");
+    const ear8 = motor.find((r) => r.subset === "wu2020_inear_k8");
     $("#finding-placement").innerHTML = miniBars(
       [
-        { label: "sensorimotor", value: sens4.score, color: "var(--region)" },
-        { label: "max spread", value: dist4.score, color: "var(--distributed)" },
-        { label: "random mean", value: randMean, color: "var(--random)" },
+        { label: "sensorimotor", value: sens8.score, color: "var(--region)" },
+        { label: "frontal", value: frontal8.score, color: "var(--random)" },
+        { label: "temporal", value: temporal8.score, color: "var(--random)" },
+        { label: "in-ear", value: ear8.score, color: "var(--wearable)" },
       ],
       {
-        min: 0.6,
+        min: 0.4,
         max: 0.78,
-        note: "Motor imagery, k=4, within-session, Riemannian TSLR.",
+        note: "Motor execution, k=8, within-session, Riemannian TSLR.",
       }
     );
 
@@ -2227,20 +2215,15 @@
         r.pipeline === "logvar_lda" &&
         r.isFull
     );
-    const ssvep = DATA.rows.find(
-      (r) => r.track === "ssvep_8ch" && r.isFull
-    );
     $("#finding-decoder").innerHTML = miniBars(
       [
         { label: "P300 generic", value: p300generic.score, color: "var(--random)" },
         { label: "P300 xDAWN", value: p300full.score, color: "var(--amber)" },
-        { label: "SSVEP generic", value: 0.133, color: "var(--random)" },
-        { label: "SSVEP CCA", value: ssvep.score, color: "var(--violet)" },
       ],
       {
         min: 0,
         max: 1,
-        note: "Generic band-power vs the paradigm’s standard decoder. The SSVEP generic value is from the earlier decoder run reported in the README.",
+        note: "Same eight channels, same folds: a generic band-power decoder vs the paradigm’s standard xDAWN pipeline.",
       }
     );
 
@@ -2253,30 +2236,20 @@
     $("#finding-tasks").innerHTML = miniBars(
       [
         {
-          label: "motor scalp",
-          value: motorComp.leftScore,
-          color: "var(--coral)",
-        },
-        {
           label: "motor in-ear",
-          value: motorComp.rightScore,
+          value: motorComp.rightScore / motorComp.leftScore,
           color: "var(--wearable)",
         },
         {
-          label: "sleep scalp",
-          value: sleepComp.leftScore,
-          color: "var(--indigo)",
-        },
-        {
           label: "sleep ear",
-          value: sleepComp.rightScore,
+          value: sleepComp.rightScore / sleepComp.leftScore,
           color: "var(--violet)",
         },
       ],
       {
-        min: 0.4,
-        max: 0.8,
-        note: "Different metrics (AUC vs κ) and chance levels; compare within each pair, not across rows.",
+        min: 0,
+        max: 1,
+        note: "Fraction of the matched scalp score. Motor execution is AUC; sleep is κ.",
       }
     );
   }
@@ -2363,51 +2336,67 @@
       mi_leftright_22ch: "Motor imagery",
       p300_8ch: "P300",
       ssvep_8ch: "SSVEP",
-      motor_execution_ear_vs_scalp: "Motor execution",
+      motor_execution_ear_vs_scalp: "Motor execution (ear)",
       sleep_staging_local: "Sleep staging",
     };
     const width = 760;
     const height = 300;
-    const m = { l: 112, r: 36, t: 22, b: 42 };
+    const m = { l: 138, r: 36, t: 22, b: 42 };
     const plotW = width - m.l - m.r;
     const plotH = height - m.t - m.b;
-    const x = (v) => m.l + v * plotW;
+    // Show the null as a distance from chance, so every task has the same
+    // reference point. A raw score axis would put a kappa null and an AUC null
+    // at different places for no scientific reason.
+    const domain = 0.11;
+    const x = (v) => m.l + ((clamp(v, -domain, domain) + domain) / (2 * domain)) * plotW;
     const rowH = plotH / Math.max(rows.length, 1);
-    const ticks = [0, 0.25, 0.5, 0.75, 1];
+    const ticks = [-0.10, -0.05, 0, 0.05, 0.10];
     const grid = ticks
       .map(
         (v) =>
           `<line class="grid-line" x1="${x(v)}" y1="${m.t}" x2="${x(
             v
-          )}" y2="${m.t + plotH}"/>
-           <text x="${x(v)}" y="${m.t + plotH + 16}" text-anchor="middle">${v.toFixed(
-            2
-          )}</text>`
+          )}" y2="${m.t + plotH}"${v === 0 ? ' stroke="var(--chance)"' : ""}/>
+           <text x="${x(v)}" y="${m.t + plotH + 16}" text-anchor="middle">${
+             v > 0 ? "+" : ""
+           }${v.toFixed(2)}</text>`
       )
       .join("");
+    const toleranceBand = `<rect x="${x(-0.05)}" y="${m.t}" width="${
+      x(0.05) - x(-0.05)
+    }" height="${plotH}" fill="var(--chance)" opacity=".06"/>`;
     const rowMarkup = rows
       .map((r, i) => {
         const cy = m.t + rowH * i + rowH / 2;
         const label = labels[r.track] || r.track;
-        const chanceX = x(r.chance);
+        const delta = Number(r.perm) - Number(r.chance);
+        const sd = Number(r.perm_sd || 0);
+        const lo = x(delta - sd);
+        const hi = x(delta + sd);
+        const cx = x(delta);
         return `<g>
           <text x="${m.l - 12}" y="${cy + 3.5}" text-anchor="end">${escapeHTML(
           label
         )}</text>
-          <line x1="${x(r.perm)}" y1="${cy}" x2="${x(r.real)}" y2="${cy}" stroke="var(--line-strong)" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="${x(r.perm)}" cy="${cy}" r="4.5" fill="var(--ink-3)" opacity=".7"/>
-          <circle cx="${x(r.real)}" cy="${cy}" r="6" fill="var(--accent)"/>
-          <path d="M${chanceX} ${cy - 8} l4.5 7h-9Z" fill="var(--chance)" opacity=".85"/>
-          <rect class="bar-hit" data-track="${escapeHTML(label)}" data-real="${r.real}" data-perm="${
+          <line x1="${lo}" y1="${cy}" x2="${hi}" y2="${cy}" stroke="var(--ink-3)" stroke-width="2" opacity=".45"/>
+          <line x1="${lo}" y1="${cy - 5}" x2="${lo}" y2="${cy + 5}" stroke="var(--ink-3)" stroke-width="2" opacity=".45"/>
+          <line x1="${hi}" y1="${cy - 5}" x2="${hi}" y2="${cy + 5}" stroke="var(--ink-3)" stroke-width="2" opacity=".45"/>
+          <circle cx="${cx}" cy="${cy}" r="6" fill="var(--accent)"/>
+          <rect class="bar-hit" data-track="${escapeHTML(label)}" data-perm="${
           r.perm
-        }" data-chance="${r.chance}" data-metric="${escapeHTML(
+        }" data-sd="${sd}" data-chance="${r.chance}" data-metric="${escapeHTML(
           r.metric
-        )}" x="${m.l}" y="${cy - rowH / 2}" width="${plotW}" height="${rowH}" fill="transparent"/>
+        )}" data-subset="${escapeHTML(r.subset || "full")}" data-subjects="${
+          r.n_subjects || 1
+        }" data-permcount="${r.n_permutations || "—"}" x="${m.l}" y="${
+          cy - rowH / 2
+        }" width="${plotW}" height="${rowH}" fill="transparent"/>
         </g>`;
       })
       .join("");
 
-    $("#control-chart").innerHTML = `<svg viewBox="0 0 ${width} ${height}" class="chart-svg" role="img" aria-label="Permutation controls: real versus shuffled-label scores">
+    $("#control-chart").innerHTML = `<svg viewBox="0 0 ${width} ${height}" class="chart-svg" role="img" aria-label="Permutation controls: shuffled-label score minus chance">
+      ${toleranceBand}
       ${grid}
       <line class="axis-line" x1="${m.l}" y1="${m.t + plotH}" x2="${
       m.l + plotW
@@ -2415,13 +2404,13 @@
       ${rowMarkup}
       <text class="axis-label" x="${m.l + plotW / 2}" y="${
       height - 4
-    }" text-anchor="middle">score (chance marker per row)</text>
+    }" text-anchor="middle">shuffled-label score − chance</text>
     </svg>`;
 
     $("#control-legend").innerHTML = `
-      <span class="legend-item"><span class="legend-dot" style="--dot:var(--accent)"></span>real labels</span>
-      <span class="legend-item"><span class="legend-dot" style="--dot:var(--ink-3)"></span>permuted labels</span>
-      <span class="legend-item"><span class="legend-dot" style="--dot:var(--chance)"></span>chance</span>`;
+      <span class="legend-item"><span class="legend-dot" style="--dot:var(--accent)"></span>permuted-label mean</span>
+      <span class="legend-item"><span class="legend-bar"></span>± 1 SD</span>
+      <span class="legend-item"><span class="legend-dot" style="--dot:var(--chance)"></span>chance · shaded ±0.05 tolerance</span>`;
 
     const tooltip = ensureTooltip($("#control-chart"));
     $$(".bar-hit", $("#control-chart")).forEach((hit) => {
@@ -2431,10 +2420,13 @@
           tooltip,
           hit.dataset.track,
           [
-            { name: "real", color: "var(--accent)", value: fmt(Number(hit.dataset.real), 3) },
-            { name: "permuted", color: "var(--ink-3)", value: fmt(Number(hit.dataset.perm), 3) },
+            { name: "permuted", color: "var(--accent)", value: fmt(Number(hit.dataset.perm), 3) },
             { name: "chance", color: "var(--chance)", value: fmt(Number(hit.dataset.chance), 3) },
+            { name: "sd", color: "var(--ink-3)", value: fmt(Number(hit.dataset.sd), 3) },
             { name: "metric", color: "var(--ink-3)", value: hit.dataset.metric },
+            { name: "subset", color: "var(--ink-3)", value: hit.dataset.subset },
+            { name: "subjects", color: "var(--ink-3)", value: hit.dataset.subjects },
+            { name: "shuffles", color: "var(--ink-3)", value: hit.dataset.permcount },
           ],
           ev
         );

@@ -1,0 +1,5 @@
+track,subset,pipeline,metric,n_classes,chance,subject,real,perm_mean,perm_sd,gap,montage,channels,null,n_permutations
+stew_workload_14ch,full_14_k14,psd_lda,roc_auc,2,0.5,cohort,0.8735847333820307,0.508402879230582,0.05256947443999989,0.36518185415144866,full_14,"AF3,F7,F3,FC5,T7,P7,O1,O2,P8,T8,FC6,F4,F8,AF4",within-pair swap,100
+stew_workload_14ch,glasses_4_k4,psd_lda,roc_auc,2,0.5,cohort,0.8435597759922085,0.501061449963477,0.054790878193689704,0.34249832602873154,glasses_4,"AF3,AF4,F7,F8",within-pair swap,100
+stew_workload_14ch,posterior_4_k4,psd_lda,roc_auc,2,0.5,cohort,0.7591611882152423,0.49698974312149985,0.05065323111332112,0.2621714450937424,posterior_4,"P7,P8,O1,O2",within-pair swap,100
+stew_workload_14ch,forehead_2_k2,psd_lda,roc_auc,2,0.5,cohort,0.7002373995617238,0.5059077489651814,0.05132857422652726,0.1943296505965424,forehead_2,"AF3,AF4",within-pair swap,100

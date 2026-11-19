@@ -52,12 +52,22 @@ def cv_score(make_clf, select, y, *, metric: str, seed: int = 0) -> float:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--track", required=True)
-    p.add_argument("--subjects", type=int, default=3)
+    p.add_argument("--subjects", type=int, default=None,
+                   help="limit to the first N subjects. Default is the full "
+                        "cohort, so the control is measured on the same subjects "
+                        "as the result it validates; a 3-subject control reports "
+                        "a `real` that is not the headline score")
     p.add_argument("--pipeline", default=None,
                    help="decoder to test; defaults to the track's first")
+    p.add_argument("--channels", default=None,
+                   help="comma-separated channel subset to test; omit for the "
+                        "full cap. Use this to validate the exact reduced "
+                        "montage quoted in the report, not just the full cap.")
+    p.add_argument("--label", default=None,
+                   help="name for the subset in the output CSV (default: full)")
     p.add_argument("--n-permutations", type=int, default=20,
-                   help="20+ needed: at 5 shuffles the estimate is noisy enough "
-                        "that a chance decoder can read 0.557")
+                   help="100+ recommended: the null mean is the estimate that "
+                        "matters, and its standard error shrinks with sqrt(n)")
     p.add_argument("--out", default="results/permutation_control.csv")
     args = p.parse_args()
 
@@ -73,15 +83,22 @@ def main() -> int:
     track = suite.get(args.track)
     pipeline_name = args.pipeline or track.pipelines[0]
     dataset = getattr(md, suite.DATASETS[track.dataset])()
-    dataset.subject_list = dataset.subject_list[: args.subjects]
+    if args.subjects:
+        dataset.subject_list = dataset.subject_list[: args.subjects]
     if track.promote:
         promote_channels(dataset, track.promote)
+
+    channels = (
+        [c.strip() for c in args.channels.split(",") if c.strip()]
+        if args.channels else None
+    )
+    subset_label = args.label or ("full" if channels is None else "subset")
 
     paradigm_cls = getattr(mp, suite.PARADIGMS[track.paradigm])
     kwargs = dict(track.paradigm_kwargs)
     if track.scorer:
         kwargs["scorer"] = track.scorer
-    paradigm = paradigm_cls(channels=None, **kwargs)
+    paradigm = paradigm_cls(channels=channels, **kwargs)
 
     if pipeline_name == "ssvep_cca":
         from eegbench.pipelines import set_ssvep_frequencies
@@ -118,26 +135,36 @@ def main() -> int:
             for _ in range(args.n_permutations)
         ]
 
+        n_classes = int(len(set(y_enc)))
+        chance = 0.5 if metric == "roc_auc" else 1.0 / max(n_classes, 1)
         rows.append({
             "track": track.name,
+            "subset": subset_label,
             "pipeline": pipeline_name,
             "subject": subject,
             "metric": metric,
-            "n_classes": int(len(set(y_enc))),
+            "n_classes": n_classes,
+            "chance": chance,
             "real": real,
             "perm_mean": float(np.mean(perm)),
             "perm_sd": float(np.std(perm)),
             "gap": real - float(np.mean(perm)),
+            "n_permutations": args.n_permutations,
+            "channels": ",".join(channels) if channels else "full",
         })
-        print(f"  real={real:.3f} perm={np.mean(perm):.3f}", flush=True)
+        print(f"  [{subset_label}] real={real:.3f} perm={np.mean(perm):.3f} "
+              f"(chance {chance:.3f})", flush=True)
 
     df = pd.DataFrame(rows)
     df.to_csv(args.out, index=False)
 
-    summary = df.groupby(["track", "pipeline"])[["real", "perm_mean", "gap"]].mean()
+    summary = (
+        df.groupby(["track", "subset", "pipeline"])[["real", "perm_mean", "gap"]]
+        .mean()
+    )
     print("\n--- summary (mean over subjects) ---")
     print(summary.to_string(float_format=lambda v: f"{v:.3f}"))
-    print("\nperm_mean should sit at chance (0.5 AUC; 1/n for accuracy).")
+    print("\nperm_mean should sit at chance (0.5 AUC; 1/n accuracy; 0 kappa).")
     print(f"wrote {args.out}")
     return 0
 

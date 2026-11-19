@@ -129,17 +129,6 @@ def main() -> int:
                 print(f"  ssvep freq_map ({len(freq_map)} classes)")
 
             pipelines = build_pipelines(names)
-            out = args.out_dir / f"{track.name}__{protocol}.csv"
-            if out.exists() and not args.overwrite:
-                print(f"{out.name}: exists, skipping (use --overwrite)")
-                continue
-
-            print(f"\n=== {track.name} / {protocol} ===")
-            dataset = build_dataset(track.dataset, args.subjects, subject_ids)
-            if track.promote:
-                promote_channels(dataset, track.promote)
-                print(f"  promoted to EEG: {list(track.promote)}")
-
             available = dataset_channels(dataset, allow_download=True)
             specs = build_specs(
                 available, track.ks, wearables=track.wearables, n_random=args.n_random

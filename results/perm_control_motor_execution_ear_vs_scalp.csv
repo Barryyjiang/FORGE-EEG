@@ -1,3 +1,7 @@
-track,pipeline,subject,metric,n_classes,real,perm_mean,perm_sd,gap
-motor_execution_ear_vs_scalp,riemann_tslr,1,roc_auc,2,0.9631944444444445,0.5332118055555556,0.04375651337648502,0.4299826388888889
-motor_execution_ear_vs_scalp,riemann_tslr,2,roc_auc,2,0.6796875,0.49566406249999995,0.06473799499216414,0.18402343750000005
+track,subset,pipeline,subject,metric,n_classes,chance,real,perm_mean,perm_sd,gap,n_permutations,channels
+motor_execution_ear_vs_scalp,wu2020_inear_k8,riemann_tslr,1,roc_auc,2,0.5,0.6135416666666667,0.5027395833333334,0.052726146505946286,0.1108020833333333,100,"LF,LB,LOU,LOD,RF,RB,ROU,ROD"
+motor_execution_ear_vs_scalp,wu2020_inear_k8,riemann_tslr,2,roc_auc,2,0.5,0.365625,0.49499218749999996,0.07180083597275673,-0.12936718749999998,100,"LF,LB,LOU,LOD,RF,RB,ROU,ROD"
+motor_execution_ear_vs_scalp,wu2020_inear_k8,riemann_tslr,3,roc_auc,2,0.5,0.47265625,0.499546875,0.0673560005533796,-0.026890625,100,"LF,LB,LOU,LOD,RF,RB,ROU,ROD"
+motor_execution_ear_vs_scalp,wu2020_inear_k8,riemann_tslr,4,roc_auc,2,0.5,0.409375,0.50990625,0.08470197639186172,-0.10053125000000002,100,"LF,LB,LOU,LOD,RF,RB,ROU,ROD"
+motor_execution_ear_vs_scalp,wu2020_inear_k8,riemann_tslr,5,roc_auc,2,0.5,0.5084908632640202,0.5076454001260239,0.05457458943335379,0.0008454631379962718,100,"LF,LB,LOU,LOD,RF,RB,ROU,ROD"
+motor_execution_ear_vs_scalp,wu2020_inear_k8,riemann_tslr,6,roc_auc,2,0.5,0.43888888888888894,0.5120381944444444,0.04993852449060355,-0.07314930555555549,100,"LF,LB,LOU,LOD,RF,RB,ROU,ROD"

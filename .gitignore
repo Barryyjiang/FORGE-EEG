@@ -3,16 +3,29 @@
 *.egg-info/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 
 # Vendored clones (separate git repos, pinned commits in SETUP.md)
 vendor/
 
+# Private working material: team chat exports, internal planning docs, drafts.
+# Nothing under here is part of the published benchmark.
+/internal/
+
 # Results are regenerable; summaries are cheap to recompute.
-# These small inputs are kept because scripts/build_site.py reads them.
+# These small inputs are kept because scripts/build_site.py and scripts/report.py
+# read them.
 results/*.csv
 !results/perm_control_*.csv
 !results/signal_quality_bnci.csv
 !results/channel_diagnostics_beta.csv
+!results/stew_drift_control.csv
+!results/stew_random_montages.csv
+!results/earsaad_paper_comparison.csv
+!results/aad_channel_curve.csv
+!results/faced_random_4.csv
+!results/faced_reference_comparison.csv
 results/*.png
 
 # Large re-downloadable caches — all redirected into ./data by eegbench.paths

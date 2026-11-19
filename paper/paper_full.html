@@ -1,0 +1,715 @@
+<!--
+  LONG-FORM VERSION, NOT BUILT.
+
+  The published page is the summary in paper/paper.html. This file keeps the
+  full paper (design, per-task results, validity, discussion, limitations) for
+  reference. It is not rendered by scripts/build_paper.py, so its inline numbers
+  are frozen at the moment it was archived and will drift from the data.
+
+  To publish it, point TEMPLATE in scripts/build_paper.py at this file and give
+  it its own output path; the placeholders and tables are unchanged.
+-->
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Electrode Budget: A Wearable Centric EEG Benchmark</title>
+  <meta name="description" content="A matched-channel benchmark of nine EEG paradigms on eight public datasets, separating electrode count from electrode placement.">
+  <meta name="author" content="Barry Jiang, Mishti Broor, Sammy Mustafa, Fyzeen Ahmad, Chau Tran">
+  <meta name="theme-color" content="#0f4d92">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="The Electrode Budget: A Wearable Centric EEG Benchmark">
+  <meta property="og:description" content="Nine paradigms, eight public datasets, one fixed decoder per task: a matched-channel benchmark of electrode count and electrode placement.">
+  <meta property="og:image" content="assets/figures/fig1_overview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/paper.css">
+  <script>
+    /* Resolve the theme before first paint: light is the default, ?theme=dark or
+       a remembered choice overrides it. See assets/paper.js (theme toggle). */
+    (function () {
+      var requested = new URLSearchParams(location.search).get("theme");
+      try { requested = requested || localStorage.getItem("eegbench-paper-theme"); } catch (e) {}
+      document.documentElement.dataset.theme = requested === "dark" ? "dark" : "light";
+    })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "name": "The Electrode Budget: A Wearable Centric EEG Benchmark",
+    "author": [{"@type": "Person", "name": "Barry Jiang"}, {"@type": "Person", "name": "Mishti Broor"}, {"@type": "Person", "name": "Sammy Mustafa"}, {"@type": "Person", "name": "Fyzeen Ahmad"}, {"@type": "Person", "name": "Chau Tran"}],
+    "abstract": "A matched-channel benchmark of nine EEG paradigms against eight public datasets, separating electrode count from electrode placement.",
+    "keywords": "EEG, brain-computer interface, wearable, benchmark, electrode montage, MOABB",
+    "isAccessibleForFree": true,
+    "datePublished": "{{generated}}"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#abstract">Skip to the abstract</a>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="topbar-title" href="#top">The Electrode Budget</a>
+      <nav aria-label="Paper sections">
+        <a href="#abstract">Abstract</a>
+        <a href="#design">Design</a>
+        <a href="#results">Results</a>
+        <a href="#validity">Validity</a>
+        <a href="#discussion">Discussion</a>
+        <a href="#reproduce">Reproduce</a>
+        <a href="#cite">Cite</a>
+        <a class="explore" href="explore/">Explorer&nbsp;↗</a>
+      </nav>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme" title="Switch between light and dark">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M20.3 14.2A8.4 8.4 0 0 1 9.8 3.7a8.5 8.5 0 1 0 10.5 10.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ------------------------------------------------------------- masthead -->
+  <div class="masthead" id="top">
+    <div class="container">
+      <h1>The Electrode Budget:<br>A Wearable Centric EEG Benchmark</h1>
+      <!-- Author block. The citation below is generated from scripts/build_paper.py. -->
+      <p class="authors"><a href="#cite">Barry Jiang</a> · <a href="#cite">Mishti Broor</a> · <a href="#cite">Sammy Mustafa</a> · <a href="#cite">Fyzeen Ahmad</a> · <a href="#cite">Chau Trần</a></p>
+      <p class="affiliation">Northwestern University, Evanston, IL, USA</p>
+
+      <nav class="paper-links" aria-label="Paper artefacts">
+        <a href="explore/">Interactive explorer</a>
+        <a href="#cite">BibTeX</a>
+        <a href="data/benchmark.json" download>Results data</a>
+        <a href="{{repo}}">Code</a>
+        <button type="button" data-print>Print / PDF</button>
+      </nav>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- --------------------------------------------------------------- teaser -->
+    <figure>
+      <a href="assets/figures/fig1_overview.pdf" title="Open the vector PDF">
+        <img src="assets/figures/fig1_overview.png" width="1600" height="776"
+             alt="Left: top-down map of a 115-channel scalp cap with eight sensorimotor electrodes in green and eight in-ear electrodes in red. Right: horizontal bars showing the percentage of each task's reference score retained by its best reduced montage.">
+      </a>
+      <figcaption>
+        <span class="label">Figure 1.</span> One recording, two channel budgets, and what
+        a reduced montage keeps. <strong>(a)</strong> Wu 2020 records 122 scalp electrodes
+        (115 of which carry a 10-5 position) and eight in-ear electrodes at the same time;
+        the green set is the best eight
+        scalp sites for motor execution, the red set is the wearable.
+        <strong>(b)</strong> Best reduced montage as a percentage of each task's reference
+        score (the reference is the full cap, except for sleep staging, where the dataset
+        has no dense cap and the reference is the matched six-channel scalp montage).
+        Absolute scores are printed at the right of each bar.
+        <span class="hint">Click a figure to open the vector PDF.</span>
+      </figcaption>
+    </figure>
+
+    <!-- ------------------------------------------------------------- abstract -->
+    <section id="abstract">
+      <div class="abstract prose">
+        <h2>Abstract</h2>
+        <p>
+          Wearable EEG replaces a dense laboratory cap with a handful of electrodes at
+          fixed, convenient sites. Whether that trade is acceptable is usually argued
+          from electrode count alone. We benchmark the other half of the question: when
+          the number of electrodes is held fixed, how much decodable signal remains at a
+          given site, and how does that cost depend on the paradigm? Across
+          {{meta:nTasks}} tasks and {{meta:nSources}} public datasets — a 22-channel
+          motor-imagery dataset at two and at four classes, an 8-channel P300 speller, a
+          12-class SSVEP speller, a simultaneous 115-scalp-plus-8-in-ear motor-execution
+          recording, nine nights of scalp-and-ear sleep, a 48-person cognitive-workload
+          headset, a simultaneous scalp / around-ear / in-ear auditory-attention
+          recording, and a 123-person emotion-recognition recording — we re-run one
+          fixed classical decoder per task on every montage,
+          with exactly <em>k</em> electrodes on each side of a comparison. The channel budget looks cheap: reduced montages
+          retain
+          {{stat:mi_leftright_22ch:retainedPct}}% of the motor-imagery reference,
+          {{stat:p300_8ch:retainedPct}}% of P300,
+          {{stat:ssvep_8ch:retainedPct}}% of SSVEP,
+          {{stat:motor_execution_ear_vs_scalp:retainedPct}}% of motor execution,
+          {{stat:sleep_staging_local:retainedPct}}% of sleep staging,
+          {{stat:stew_workload_14ch:retainedPct}}% of cognitive workload,
+          {{stat:auditory_attention_earsaad:retainedPct}}% of auditory attention and
+          {{stat:faced_emotion_123:retainedPct}}% of emotion recognition.
+          Placement is the larger effect. In one session, with the same decoder and the same channel
+          count, a sensorimotor scalp patch reaches
+          {{pair:inear_vs_senso:meanA}} AUC while eight in-ear electrodes reach
+          {{pair:inear_vs_senso:meanB}} (paired Δ {{pair:inear_vs_senso:delta}},
+          {{pair:inear_vs_senso:sign}}). Yet the ear is not useless: at a matched six
+          channels the same wearable site loses only {{pair:sleep_scalp_vs_ear:delta_abs}} κ on
+          sleep staging and gains {{pair:sleep_ear6_vs_ear14:delta_abs}} κ when all fourteen
+          ear electrodes are used. The cost of a wearable is a property of the signal,
+          not of the electrode: broad, slow sleep activity reaches the ear, a focal
+          sensorimotor rhythm does not, and a speech envelope that even the full scalp
+          only partly tracks is hardest of all for twelve in-ear electrodes.
+        </p>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------- design -->
+    <section id="design">
+      <div class="prose">
+        <h2><span class="num">1</span>What this benchmark measures</h2>
+        <p class="lede">
+          An electrode montage is a spatial sampler. Two questions hide inside one
+          comparison: how much information do <em>k</em> electrodes carry, and how much
+          does it depend on <em>which</em> <em>k</em>? Only the second question is about
+          wearables, and it can only be answered with the first held fixed.
+        </p>
+        <p>
+          The benchmark is a declarative cross-product of dataset, paradigm, protocol,
+          montage and decoder. A <em class="term">task</em> is one
+          (dataset, paradigm, protocol) entry with one fixed classical decoder; a
+          <em class="term">montage</em> is a named set of electrode sites at a given
+          channel count. Every comparison on this page puts exactly <em>k</em> electrodes
+          on both sides, so a difference is a difference in placement.
+        </p>
+        <ul>
+          <li><strong>Equal-N subsets.</strong> Region montages, max-spread (farthest-point)
+            subsets and random subsets all have exactly <em>k</em> channels. Random subsets
+            are the chance control for "does this montage beat an arbitrary one".</li>
+          <li><strong>Paired differences.</strong> Deltas pair each participant with
+            themselves (or each night with itself, for sleep), so between-subject variance
+            cancels. Every interval quoted here is a paired <em>t</em> interval at 95%.</li>
+          <li><strong>Measured wearables first, proxies labelled.</strong> The in-ear and
+            ear montages of motor execution, sleep and auditory attention are electrodes
+            that were physically recorded alongside the scalp electrodes, not
+            nearest-neighbour stand-ins for a product. The workload headset has no ear
+            recording, so its four- and two-electrode frontal sets are scalp proxies; they
+            carry <code>fidelity: proxy</code> in every result file and in the explorer,
+            and are never described as a device.</li>
+          <li><strong>Full cohorts.</strong> 9, 8, 10, 6, 9, 48 and 15 subjects/nights: the complete
+            public datasets used here, not a convenient subset.</li>
+        </ul>
+      </div>
+
+{{table:TASKS}}
+
+      <div class="prose">
+        <p>
+          {{meta:nTasks}} tasks, {{meta:nSources}} datasets, {{meta:nRows}} evaluated
+          (montage × decoder × protocol) cells and {{meta:nExamples}} trials or windows in
+          total. The decoders are deliberately classical and are refit from scratch inside
+          every fold: no pretrained weights, no fine-tuning, and no per-montage
+          hyperparameter search.
+        </p>
+      </div>
+
+{{table:DECODERS}}
+    </section>
+
+    <!-- -------------------------------------------------------------- results -->
+    <section id="results">
+      <div class="prose">
+        <h2><span class="num">2</span>Results</h2>
+
+        <h3>2.1 &nbsp;The channel budget: returns flatten early</h3>
+        <p>
+          More electrodes help, and then they stop helping much. In motor imagery the
+          max-spread subset climbs from {{cell:mi_leftright_22ch:distributed_k4:score}} at
+          four electrodes to {{cell:mi_leftright_22ch:distributed_k8:score}} at eight and
+          {{cell:mi_leftright_22ch:distributed_k16:score}} at sixteen, against a full-cap
+          reference of {{stat:mi_leftright_22ch:reference}} at 22 electrodes.
+          Eight electrodes placed over the motor cortex reach
+          {{cell:mi_leftright_22ch:region-sensorimotor_k8:score}}, which is
+          {{stat:mi_leftright_22ch:retainedPct}}% of the reference — a paired loss of
+          {{stat:mi_leftright_22ch:delta_abs}} AUC, 95% CI {{stat:mi_leftright_22ch:ci}}
+          ({{stat:mi_leftright_22ch:sign}}).
+        </p>
+        <p>
+          How much a montage can afford depends on how many things it is asked to
+          distinguish. The same nine people and the same cap, cued for four classes
+          instead of two, reach {{stat:mi_4class_22ch:reference}} accuracy at the full
+          22 electrodes and {{cell:mi_4class_22ch:region-sensorimotor_k8:score}} at the
+          same eight sensorimotor ones — {{stat:mi_4class_22ch:retainedPct}}% of the
+          reference, against {{stat:mi_leftright_22ch:retainedPct}}% for two classes. The
+          paired loss grows from {{pair:mi_cap_vs_senso8:delta_abs}} to
+          {{pair:mi4_senso_vs_full:delta_abs}} (95% CI {{pair:mi4_senso_vs_full:ci}},
+          {{pair:mi4_senso_vs_full:sign}}). Feet and tongue are represented near the
+          midline, and the sensorimotor patch is lateralised over C3 and C4, so asking it
+          for two more classes costs more than the electrode count alone would suggest.
+          “Eight electrodes are enough” is a claim about a task, not about a head.
+        </p>
+      </div>
+
+      <figure>
+        <a href="assets/figures/fig2_channel_budget.pdf" title="Open the vector PDF">
+          <img src="assets/figures/fig2_channel_budget.png" width="1600" height="647"
+               alt="Panel a: motor-imagery ROC-AUC against the number of electrodes for max-spread subsets, the sensorimotor region, random-subset bands and the full cap reference. Panel b: percentage of each task's reference score retained by its best reduced montage at each channel count.">
+        </a>
+        <figcaption>
+          <span class="label">Figure 2.</span> The channel budget.
+          <strong>(a)</strong> Motor imagery (Riemannian TSLR, same session): the
+          max-spread subset, the sensorimotor region, the full-cap reference and chance.
+          The grey band is the min–max envelope of random subsets over three seeds, so a
+          montage can be judged against an arbitrary one of the same size.
+          <strong>(b)</strong> Every task on one axis: the best non-random reduced montage
+          at each channel count, as a percentage of that task's reference. The sleep track
+          compares the six-channel ear montage and the all-fourteen ear montage with the
+          matched six-channel scalp reference, because no dense cap exists in that dataset.
+        </figcaption>
+      </figure>
+
+{{table:RESULTS}}
+
+      <div class="prose">
+        <h3>2.2 &nbsp;Placement is the larger effect</h3>
+        <p>
+          Wu 2020 is the cleanest placement experiment available: one session per
+          participant, six participants, a 115-channel scalp cap and eight in-ear
+          electrodes recorded at the
+          same time. With eight channels on both sides and the same decoder, the
+          sensorimotor patch scores
+          {{cell:motor_execution_ear_vs_scalp:region-sensorimotor_k8:score}} while the
+          frontal and temporal patches score
+          {{cell:motor_execution_ear_vs_scalp:region-frontal_k8:score}} and
+          {{cell:motor_execution_ear_vs_scalp:region-temporal_k8:score}}, and the ear
+          scores {{cell:motor_execution_ear_vs_scalp:wu2020_inear_k8:score}}. The spread
+          across placements is larger than the entire cost of dropping the other 107
+          electrodes: the full cap scores
+          {{stat:motor_execution_ear_vs_scalp:reference}} against
+          {{cell:motor_execution_ear_vs_scalp:region-sensorimotor_k8:score}} for the best
+          eight ({{pair:cap_vs_senso:delta}} AUC, 95% CI {{pair:cap_vs_senso:ci}}), while
+          moving those same eight electrodes from motor cortex to the ear costs
+          {{pair:inear_vs_senso:delta_abs}} AUC.
+        </p>
+      </div>
+
+      <figure>
+        <a href="assets/figures/fig3_placement.pdf" title="Open the vector PDF">
+          <img src="assets/figures/fig3_placement.png" width="1600" height="910"
+               alt="Top row: four top-down head maps of the same eight-channel budgets over sensorimotor, frontal and temporal scalp and in the ear. Bottom: a bar chart of their ROC-AUC against the full-cap reference and chance.">
+        </a>
+        <figcaption>
+          <span class="label">Figure 3.</span> Same eight electrodes, same session, same
+          decoder, four placements. <strong>(a)</strong> The 115-channel cap in grey with
+          the eight electrodes of each montage coloured. <strong>(b)</strong> ROC-AUC for
+          each placement, plus the max-spread subset and the mean of random subsets (the
+          whisker spans the three seeds). The dashed line is the full 115-channel cap and
+          the dotted line is chance.
+        </figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>2.3 &nbsp;The wearable gap is task-dependent</h3>
+        <p>
+          The same ear site behaves very differently on a fast, focal rhythm and on slow,
+          broad sleep activity. On motor execution, eight in-ear electrodes lose
+          {{pair:inear_vs_senso:delta_abs}} AUC against the matched eight scalp electrodes
+          (95% CI {{pair:inear_vs_senso:ci}}, {{pair:inear_vs_senso:sign}}). On sleep
+          staging, six ear electrodes lose {{pair:sleep_scalp_vs_ear:delta_abs}} κ against the
+          matched six scalp channels (95% CI {{pair:sleep_scalp_vs_ear:ci}},
+          {{pair:sleep_scalp_vs_ear:sign}}), and adding the remaining eight ear electrodes
+          recovers part of it: all fourteen reach
+          {{pair:sleep_ear6_vs_ear14:meanB}} κ, a gain of
+          {{pair:sleep_ear6_vs_ear14:delta}} (95% CI {{pair:sleep_ear6_vs_ear14:ci}},
+          {{pair:sleep_ear6_vs_ear14:sign}}).
+        </p>
+      </div>
+
+      <figure>
+        <a href="assets/figures/fig4_wearable_gap.pdf" title="Open the vector PDF">
+          <img src="assets/figures/fig4_wearable_gap.png" width="1600" height="680"
+               alt="Two paired slopegraphs. Left: per-subject ROC-AUC for eight sensorimotor scalp electrodes versus eight in-ear electrodes. Right: per-night Cohen's kappa for six scalp electrodes, six ear electrodes and fourteen ear electrodes.">
+        </a>
+        <figcaption>
+          <span class="label">Figure 4.</span> Paired wearable comparisons; every thin line
+          is one participant (left) or one night (right), the thick line is the group mean.
+          <strong>(a)</strong> Motor execution, matched eight channels: the gap is
+          {{pair:inear_vs_senso:delta}} AUC and negative in every subject.
+          <strong>(b)</strong> Sleep staging, matched six channels: the ear loses
+          {{pair:sleep_scalp_vs_ear:delta_abs}} κ, and the all-fourteen ear montage gains
+          {{pair:sleep_ear6_vs_ear14:delta_abs}} κ back without closing the gap to scalp.
+        </figcaption>
+      </figure>
+
+{{table:WEARABLE}}
+
+      <div class="prose">
+        <h3>2.4 &nbsp;Decoder choice rivals montage choice</h3>
+        <p>
+          The same eight P300 channels score {{pair:p300_decoder:meanA}} with a generic
+          log-variance decoder and {{pair:p300_decoder:meanB}} with xDAWN plus Riemannian
+          decoding: a gap of {{pair:p300_decoder:delta}} AUC
+          (95% CI {{pair:p300_decoder:ci}}, {{pair:p300_decoder:sign}}), which is larger
+          than any montage effect measured in that task. SSVEP, the one task that is
+          naturally scored as information transfer rate, tells the same story:
+          {{stat:ssvep_8ch:itrReference}} bits/min at the full eight-electrode cap against
+          {{stat:ssvep_8ch:itrBest}} bits/min for the best four electrodes. Motor imagery shows the same
+          pattern in miniature: at the same eight sensorimotor channels, Riemannian TSLR
+          beats log-variance by {{pair:mi_decoder:delta_abs}} AUC
+          (95% CI {{pair:mi_decoder:ci}}). A montage comparison is only interpretable with
+          the paradigm's standard decoder in place, which is why one decoder per task is
+          fixed in advance here and never tuned per montage.
+        </p>
+      </div>
+
+      <figure>
+        <a href="assets/figures/fig5_decoder.pdf" title="Open the vector PDF">
+          <img src="assets/figures/fig5_decoder.png" width="1600" height="555"
+               alt="Panel a: per-subject P300 ROC-AUC under log-variance and xDAWN decoding on the same eight channels. Panel b: the same two decoders at the full eight channels and at a max-spread four. Panel c: three decoders on the same eight sensorimotor channels in motor imagery.">
+        </a>
+        <figcaption>
+          <span class="label">Figure 5.</span> The decoder axis.
+          <strong>(a)</strong> P300, identical channels, two decoders; every subject
+          improves. <strong>(b)</strong> In the same task the decoder gap is much larger
+          than the montage gap. <strong>(c)</strong> Motor imagery at the same eight
+          sensorimotor channels with three decoders (whiskers are ±1 s.e.m. across
+          subject-sessions; the dashed line is the full-cap reference).
+        </figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>2.5 &nbsp;Three paradigms that test the rule from a new angle</h3>
+        <p>
+          The last three tasks were added because each probes the placement rule from a
+          direction the earlier ones could not, and each is scored under a protocol the
+          others do not use.
+        </p>
+        <p>
+          <strong>Cognitive workload.</strong> STEW is 48 participants wearing a
+          14-channel Emotiv headset, with a 150-second rest recording followed by a
+          150-second SIMKAP multitasking recording. Here the decoder never sees the test
+          person, which is the protocol a wearable product would actually face. Under it
+          the full 14 channels reach
+          {{cell:stew_workload_14ch:full_14_k14:score}} AUC and a four-electrode frontal
+          “glasses-like” subset keeps {{stat:stew_workload_14ch:retainedPct}}% of
+          that, a paired loss of {{pair:stew_glasses_vs_full:delta_abs}} AUC (95% CI
+          {{pair:stew_glasses_vs_full:ci}}, {{pair:stew_glasses_vs_full:sign}}). The same
+          four electrodes beat a four-electrode posterior subset by
+          {{pair:stew_glasses_vs_posterior:delta}} AUC (95% CI
+          {{pair:stew_glasses_vs_posterior:ci}}, {{pair:stew_glasses_vs_posterior:sign}}),
+          and they sit at the 90th percentile of random four-electrode draws. Site, not
+          count, is doing the work — and here the useful site is the front of the head,
+          not the back.
+        </p>
+        <p>
+          The task also carries a confound that no analysis can remove. Rest was always
+          recorded before the task, so the two conditions sit on opposite sides of a
+          session boundary. A label-free control that asks only “first half or second
+          half of this recording?” recovers a substantial share of the above-chance
+          margin the rest-versus-task decoder uses (Table 6). The workload result is
+          therefore reported as rest-versus-SIMKAP <em>condition recognition</em>, never
+          as a validated mental-workload score. That the decoder transfers to an unseen
+          person at all is itself evidence that much of what it reads is gross and
+          universal rather than neural.
+        </p>
+        <p>
+          <strong>Auditory attention.</strong> Ear-SAAD is the only public dataset that
+          records 29 scalp, 19 around-ear and 12 in-ear electrodes at the same time while
+          a participant follows one of two talkers, so it tests the ear site directly
+          instead of by proxy. At the paper’s 60-second decision window, twelve in-ear
+          electrodes decode at {{cell:auditory_attention_earsaad:in_ear_12_k12:score}}
+          against {{cell:auditory_attention_earsaad:scalp_12_k12:score}} for the twelve
+          most spread scalp electrodes: a paired loss of
+          {{pair:aad_inear_vs_scalp12:delta_abs}} (95% CI {{pair:aad_inear_vs_scalp12:ci}},
+          {{pair:aad_inear_vs_scalp12:sign}}). At nineteen electrodes the around-ear array
+          loses {{pair:aad_around_vs_scalp19:delta_abs}} against a matched scalp nineteen
+          (95% CI {{pair:aad_around_vs_scalp19:ci}},
+          {{pair:aad_around_vs_scalp19:sign}}). This is the largest wearable cost in the
+          benchmark, and it is the one that matters most, because attention decoding is
+          the application that motivates ear-EEG in the first place.
+        </p>
+        <p>
+          It is also a latency cost rather than a wall. Twelve in-ear electrodes climb
+          from 0.519 at a one-second decision window to
+          {{cell:auditory_attention_earsaad:in_ear_12_k12:score}} at sixty seconds and
+          0.844 at ten minutes, while the matched scalp twelve goes from 0.548 to
+          {{cell:auditory_attention_earsaad:scalp_12_k12:score}} and 0.967. The ear does
+          not fail to carry the signal; it needs longer to decide, which is exactly what a
+          lower signal-to-noise ratio predicts.
+        </p>
+        <p>
+          The ear also runs out of electrodes long before the scalp does. Sweeping the
+          channel budget at a fixed 60 s window, four in-ear electrodes already reach
+          {{curve:aad:in_ear:4}} against a twelve-electrode ceiling of
+          {{curve:aad:in_ear:12}} — eight more electrodes buy 0.009. The around-ear array
+          is flat from two electrodes on ({{curve:aad:around_ear:2}} to
+          {{curve:aad:around_ear:19}}). The scalp reference over the same budgets climbs
+          from {{curve:aad:scalp:2}} to {{curve:aad:scalp:19}}. Adding ear electrodes is not
+          a route to better decoding; changing the site is.
+        </p>
+        <p>
+          <strong>Emotion.</strong> FACED is the largest cohort in the benchmark: 123
+          participants, 30 scalp electrodes, and short videos chosen to elicit a
+          particular emotion. Binary valence decodes at
+          {{stat:faced_emotion_123:reference}} balanced accuracy against a 0.5 chance
+          level — a real effect, significant across participants, but a small one.
+          Four posterior electrodes reach
+          {{cell:faced_emotion_123:posterior_4_k4:score}}, a paired loss of
+          {{pair:faced_posterior_vs_full:delta_abs}} (95% CI
+          {{pair:faced_posterior_vs_full:ci}}, {{pair:faced_posterior_vs_full:sign}}).
+          The interval includes zero: at four electrodes this task costs nothing
+          measurable.
+        </p>
+        <p>
+          The placement result points the opposite way from workload, and it is the
+          useful part. A glasses-like frontal four scores
+          {{cell:faced_emotion_123:glasses_4_k4:score}}, below the posterior four
+          ({{pair:faced_glasses_vs_posterior:delta}}), and sits only at the 65th
+          percentile of twenty random four-electrode draws while the posterior four
+          sits at the 80th. Frontal electrodes are where a glasses frame would put
+          them, and for this task they are the wrong choice: the answer to “where
+          does the signal live” is a property of the paradigm, not of the head.
+        </p>
+        <p>
+          That cost has to be read against the margin. Retaining
+          {{stat:faced_emotion_123:retainedPct}}% of a score that sits only seven
+          points above chance is not the same claim as retaining
+          {{stat:ssvep_8ch:retainedPct}}% of {{stat:ssvep_8ch:reference}}, and the
+          benchmark's headroom column exists so the two cannot be confused. A task
+          whose whole effect is small cannot support a strong statement about what a
+          wearable preserves, only a weak one.
+        </p>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------------- validity -->
+    <section id="validity">
+      <div class="prose">
+        <h2><span class="num">3</span>What would make these numbers wrong?</h2>
+        <p>
+          A benchmark is only as useful as its failure modes. Two questions decide whether
+          a montage result is trustworthy: can the decoder learn anything from the labels
+          it was given, and were the two montages really evaluated on equal terms?
+        </p>
+        <p>
+          The first is answered with permutation controls. Each task's headline decoder and
+          channel subset is re-run on shuffled labels — block-permuted for the continuous
+          sleep task, since a circular shift there preserves the stage runs and the
+          band-power drift and leaves the null near κ 0.13 — with 100 shuffles for motor
+          imagery, SSVEP and motor execution, 20 for P300 (whose null standard deviation
+          is small) and 200 block permutations for sleep, on every night. Every null lands
+          within ±0.05 of its task's chance level
+          (ROC-AUC 0.5, accuracy 1/12 for SSVEP, κ 0 for sleep), and the report refuses to
+          write if a control leaves that band.
+        </p>
+        <p>
+          The second is answered by construction: every comparison on this page uses
+          exactly <em>k</em> electrodes on both sides, references and reduced montages are
+          scored on the same trials with the same folds, and the interval around each delta
+          is computed from the paired per-participant differences rather than from
+          unpaired group means. Each control covers the full cohort of its task, so the
+          null is measured on the same subjects as the result it validates, and the sleep
+          track's null permutes whole blocks of epochs — a circular shift there leaves the
+          stage runs aligned with the drift of band power and is not a valid null.
+        </p>
+      </div>
+
+      <figure>
+        <a href="assets/figures/fig6_controls.pdf" title="Open the vector PDF">
+          <img src="assets/figures/fig6_controls.png" width="1600" height="1170"
+               alt="Nine panels, one per task, each showing the real score per subject or montage against the shuffled-label null with its standard deviation, with a shaded tolerance band around chance.">
+        </a>
+        <figcaption>
+          <span class="label">Figure 6.</span> Permutation controls. Blue circles are the
+          real scores; grey squares are the mean of the shuffled-label runs with ±1 s.d.
+          error bars; the shaded band is the benchmark's ±0.05 tolerance around chance.
+          Panels (a)–(d) are per subject, panel (e) is per montage because the sleep
+          control is aggregated that way. Note the motor-execution panel: the in-ear
+          montage's null and its real score are indistinguishable on those subjects, which
+          is the same conclusion Figure 4 reaches from the other direction.
+        </figcaption>
+      </figure>
+
+{{table:CONTROLS}}
+
+{{table:CHECKS}}
+    </section>
+
+    <!-- ------------------------------------------------------------ discussion -->
+    <section id="discussion">
+      <div class="prose">
+        <h2><span class="num">4</span>Discussion</h2>
+        <h3>What the results say</h3>
+        <ol>
+          <li>
+            <strong>Placement is the main effect, and it is task-dependent.</strong>
+            Holding the channel count fixed, moving eight electrodes from motor cortex to
+            the ear costs {{pair:inear_vs_senso:delta_abs}} AUC on motor execution but only
+            {{pair:sleep_scalp_vs_ear:delta_abs}} κ on sleep staging. The difference is the
+            signal: sleep is broad and slow and reaches the ear, while a focal
+            sensorimotor rhythm does not.
+          </li>
+          <li>
+            <strong>The channel budget itself is cheap above roughly four to eight
+            electrodes.</strong> Every task keeps {{stat:sleep_staging_local:retainedPct}}–{{stat:ssvep_8ch:retainedPct}}%
+            of its reference score with a reduced montage, and the curves flatten well
+            before the cap is exhausted (Figure 2). Reporting "how many channels" without
+            "which channels" therefore answers the less interesting half of the question.
+            The one exception is auditory attention, which keeps
+            {{stat:auditory_attention_earsaad:retainedPct}}% at matched channels: a lower
+            signal-to-noise ratio is not free, it is only slow.
+          </li>
+          <li>
+            <strong>Decoder choice can dominate montage choice.</strong> On identical P300
+            channels, swapping the decoder moves the score by
+            {{pair:p300_decoder:delta}} AUC (Figure 5). A montage benchmark that ignores
+            the paradigm's standard decoder measures decoder mismatch, not electrodes.
+          </li>
+        </ol>
+
+        <h3>Limitations and scope</h3>
+        <p>
+          This is an <strong>electrode-subset benchmark</strong>, not a simulation of a
+          product. It measures how much decodable signal is present at a site under a
+          fixed classical pipeline. It does not model a particular wearable's amplifier,
+          reference scheme, impedance or motion artefact; those are hardware questions, and
+          the natural next step is a forward-model study validated against the
+          simultaneous scalp-and-ear recordings used here.
+        </p>
+        <ul>
+          <li><strong>Decoders are classical and fixed.</strong> No pretrained weights, no
+            fine-tuning, no per-montage search. The point is to compare electrode layouts on
+            equal terms, not to win a leaderboard — and the size of the decoder effects above
+            suggests deep models would add a second axis of variation worth treating
+            separately.</li>
+          <li><strong>Spelling is not communication.</strong> SSVEP is reported in accuracy
+            as well as information transfer rate, because a wearable BCI is judged by the
+            latter; the ITR ranking of montages can differ from the accuracy ranking.</li>
+          <li><strong>One non-EEG axis is missing.</strong> Comfort, gel-free operation and
+            setup time are the reasons wearables exist; none of them appear in these numbers.</li>
+          <li><strong>The workload task is confounded by design.</strong> STEW recorded rest
+            before the task, so its two conditions sit on opposite sides of a session
+            boundary and the released data cannot separate workload from time in session.
+            Table 6 measures the drift and the text reports the task as condition
+            recognition. A dataset that interleaved the conditions would settle it; none of
+            the public workload sets here does.</li>
+          <li><strong>Two cohorts are small.</strong> Motor execution has six participants
+            and sleep nine nights. Their paired intervals are reported rather than hidden,
+            and both are wide enough that the sign of the effect is the claim, not its size.</li>
+          <li><strong>A c-VEP track was evaluated and dropped.</strong> The public datasets
+            expose stimulus-bit events rather than command-level labels, so the generic
+            pipeline is not a valid decoder for that paradigm. Reporting it would have
+            measured the pipeline, not the montage.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- reproduce -->
+    <section id="reproduce">
+      <div class="prose">
+        <h2><span class="num">5</span>Reproducing this page</h2>
+        <p>
+          Every number on this page is generated. The prose lives in a template; the
+          tables, the figures and the inline statistics are written from
+          <code>results/benchmark/*.csv</code> and <code>docs/data/benchmark.json</code> by
+          the scripts below, so a rebuilt page cannot drift from the data.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption><span class="label">Table 7.</span> What each command regenerates.</caption>
+          <thead>
+            <tr><th>Command</th><th>Writes</th><th>Reads</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>scripts/run_all.py</code></td>
+              <td><code>results/benchmark/*.csv</code>, controls, sleep track, report</td>
+              <td>the public datasets (downloaded and cached once)</td>
+            </tr>
+            <tr>
+              <td><code>scripts/build_site.py</code></td>
+              <td><code>docs/data/benchmark.json</code></td>
+              <td><code>results/benchmark/*.csv</code> (raw datasets not needed)</td>
+            </tr>
+            <tr>
+              <td><code>figures/build_figures.py</code></td>
+              <td><code>docs/assets/figures/*.png</code>, <code>*.pdf</code></td>
+              <td><code>docs/data/benchmark.json</code>, <code>results/benchmark/*.csv</code></td>
+            </tr>
+            <tr>
+              <td><code>scripts/build_paper.py</code></td>
+              <td><code>docs/index.html</code></td>
+              <td><code>paper/paper.html</code> + the bundle + the raw CSVs</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prose">
+        <pre><code># 1. benchmark, controls, signal quality, report
+.\.venv\Scripts\python.exe scripts\run_all.py
+
+# 2. site bundle (numbers for both the paper and the explorer)
+.\.venv\Scripts\python.exe scripts\build_site.py
+
+# 3. paper figures (PNG for the page, PDF for print)
+.\.venv\Scripts\python.exe figures\build_figures.py
+
+# 4. this page
+.\.venv\Scripts\python.exe scripts\build_paper.py
+
+# 5. preview the site locally
+python -m http.server 8000 --directory docs</code></pre>
+        <p>
+          The interactive explorer at <a href="explore/">/explore/</a> reads the same bundle
+          and shows every montage, including the random subsets and per-decoder tables that
+          are summarized here.
+        </p>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------ cite -->
+    <section id="cite">
+      <div class="prose">
+        <h2><span class="num">6</span>Citation and data</h2>
+        <p>
+          If you use this benchmark, cite the paper and the eight original datasets.
+          The citation block is a placeholder until the paper is submitted.
+        </p>
+      </div>
+
+      <div class="prose cite-block">
+        <button class="copy-button" type="button" data-copy-target="#bibtex">Copy</button>
+        <pre id="bibtex"><code>{{bibtex}}</code></pre>
+      </div>
+
+      <div class="prose">
+        <p>
+          The benchmark covers {{meta:nTasks}} paradigms across {{meta:nSources}} public
+          datasets: {{meta:nRows}} evaluated montage × decoder cells and
+          {{meta:nExamples}} trials or windows.
+        </p>
+        <p class="small">
+          Datasets: BNCI 2014-001 (motor imagery, two and four classes) and 2014-008
+          (P300), Nakanishi 2015 (SSVEP), Wu 2020 (simultaneous scalp and in-ear motor
+          execution), OpenNeuro ds004348 (scalp and ear sleep), STEW (cognitive
+          workload), Ear-SAAD (simultaneous scalp, around-ear and in-ear auditory
+          attention), and FACED (emotion recognition). All are public and permissively
+          licensed; see the repository for versions.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p>
+        <strong>The Electrode Budget</strong> · page generated from
+        <code>results/benchmark/</code> on {{generated}}.
+      </p>
+      <p>
+        <a href="#top">Top</a> ·
+        <a href="explore/">Explorer</a> ·
+        <a href="data/benchmark.json">Data</a> ·
+        <a href="{{repo}}">Code</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="assets/paper.js" defer></script>
+</body>
+</html>

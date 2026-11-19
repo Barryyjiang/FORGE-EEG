@@ -5,9 +5,11 @@ published positive results. Scored with Cohen's kappa (chance = 0), block-wise
 CV so adjacent 30 s epochs cannot leak, and a matched 6-vs-6 montage so that
 site is not confounded with channel count.
 
-Label semantics: the dataset codes stages 1-5 without documenting the mapping.
-Kappa is invariant to it, so scoring is safe; interpretation must not assume
-"4 = N3".
+The dataset's scoring column also contains Arousal (6), Artefact (7) and
+Unscored (8) epochs. Those are not sleep stages: they are dropped before the
+features and labels are aligned, so every subject is a five-class problem.
+The stage map (1=Wake, 2=REM, 3=N1, 4=N2, 5=N3) comes from the dataset's own
+``*_acq-scoring_events.json``.
 
     .\\.venv\\Scripts\\python.exe scripts\\sleep_track.py --subjects 001,002,003
 """
@@ -33,6 +35,8 @@ BANDS = {
 SCALP_6 = ["C3", "O1", "F3", "C4", "O2", "F4"]
 #: 3 per ear, matched to the 6-channel scalp montage.
 EAR_6 = ["ELB", "ELG", "ELK", "ERB", "ERG", "ERK"]
+#: The five scored sleep stages. 6/7/8 are arousal, artefact and unscored.
+STAGES = (1, 2, 3, 4, 5)
 EPOCH_S = 30.0
 BLOCK = 20
 
@@ -63,6 +67,33 @@ def bandpower_windows(X: np.ndarray, sfreq: float, n_win: int) -> np.ndarray:
     return feats
 
 
+def permute_labels(y: np.ndarray, rng, mode: str, block: int = BLOCK) -> np.ndarray:
+    """A null label sequence for the permutation control.
+
+    ``shift``
+        Circular shift. Preserves every run of stages exactly, so the rotated
+        sequence is *not* exchangeable with the original when stage priors
+        drift across the night (N2 dominates long stretches of every night).
+        Kept for continuity with earlier runs, but it is the wrong null: it
+        leaves the slow band-power drift partially aligned with the stage runs.
+    ``block``
+        Shuffle whole ``block``-epoch chunks. Keeps each chunk's internal run
+        structure but destroys the long-range alignment between stage runs and
+        the drift of band power — which is the association a valid null has to
+        break.
+    """
+    y = np.asarray(y)
+    if mode == "shift":
+        shift = int(rng.integers(block, max(block + 1, len(y) - block)))
+        return np.roll(y, shift)
+    if mode == "block":
+        idx = np.arange(len(y))
+        chunks = [idx[i : i + block] for i in range(0, len(y), block)]
+        order = rng.permutation(len(chunks))
+        return y[np.concatenate([chunks[i] for i in order])]
+    raise ValueError(f"unknown null mode {mode!r}")
+
+
 def run_cv(feats: np.ndarray, labels: np.ndarray) -> tuple[float, float]:
     from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
     from sklearn.metrics import cohen_kappa_score
@@ -90,7 +121,16 @@ def main() -> int:
     p.add_argument("--out", type=Path,
                    default=Path("results/benchmark/sleep_staging_local__within_session.csv"))
     p.add_argument("--permutations", type=int, default=0,
-                   help="circular-shift label control on the first subject")
+                   help="label control on every night")
+    p.add_argument("--null", choices=["shift", "block"], default="block",
+                   help="null label sequence for the control. 'block' (default) "
+                        "is the valid one; a circular shift preserves the run "
+                        "and drift alignment and gives a null well above chance "
+                        "(see permute_labels)")
+    p.add_argument("--perm-out", type=Path,
+                   default=Path("results/perm_control_sleep_staging_local.csv"),
+                   help="where control rows go; point this elsewhere to compare "
+                        "nulls without overwriting the committed control")
     args = p.parse_args()
 
     import mne
@@ -117,12 +157,13 @@ def main() -> int:
         names = raw.info["ch_names"]
         sfreq = raw.info["sfreq"]
         n_win = min(len(scoring), raw.n_times // int(EPOCH_S * sfreq))
-        y = scoring["staging"].to_numpy()[:n_win]
+        stages = scoring["staging"].to_numpy()[:n_win]
+        keep = np.isin(stages, STAGES)
 
         montages = {
             "scalp_6": [c for c in SCALP_6 if c in names],
             "ear_6": [c for c in EAR_6 if c in names],
-            "ear_13": [c for c in names if c.startswith(("EL", "ER"))],
+            "ear_14": [c for c in names if c.startswith(("EL", "ER"))],
         }
 
         for montage, channels in montages.items():
@@ -130,8 +171,9 @@ def main() -> int:
                 continue
             picks = [names.index(c) for c in channels]
             data = raw.get_data(picks=picks).astype(np.float32)
-            feats = bandpower_windows(data, sfreq, n_win)
+            feats = bandpower_windows(data, sfreq, n_win)[keep]
             del data
+            y = stages[keep]
             kappa, acc = run_cv(feats, y)
             print(f"  [{montage}] {len(channels)}ch kappa={kappa:.3f} acc={acc:.3f}",
                   flush=True)
@@ -150,25 +192,37 @@ def main() -> int:
                 "track": "sleep_staging_local",
                 "dataset_key": "openneuro_ds004348",
                 "channels": ",".join(channels),
+                "fidelity": "measured",
                 "accuracy": acc,
+                "n_windows": int(len(y)),
+                "n_dropped": int((~keep).sum()),
             })
 
-            if args.permutations and subject == subjects[0]:
-                rng = np.random.default_rng(0)
+            if args.permutations:
+                # Every night, not just the first: the control's `real` column
+                # is read next to the cohort mean, so it has to be measured on
+                # the same cohort as the result it validates. Seeded per subject
+                # so a re-run reproduces.
+                rng = np.random.default_rng(int(subject))
                 shifts = []
                 for _ in range(args.permutations):
-                    shift = int(rng.integers(BLOCK, n_win - BLOCK))
-                    shifts.append(run_cv(feats, np.roll(y, shift))[0])
+                    shifts.append(run_cv(feats, permute_labels(y, rng, args.null))[0])
                 perm_rows.append({
                     "track": "sleep_staging_local",
+                    "subset": f"{montage}_k{len(channels)}",
                     "pipeline": "bandpower_lda",
                     "metric": "kappa",
                     "n_classes": int(len(np.unique(y))),
+                    "chance": 0.0,
+                    "subject": subject,
                     "real": kappa,
                     "perm_mean": float(np.mean(shifts)),
                     "perm_sd": float(np.std(shifts)),
                     "gap": kappa - float(np.mean(shifts)),
                     "montage": montage,
+                    "channels": ",".join(channels),
+                    "null": args.null,
+                    "n_permutations": args.permutations,
                 })
                 print(f"  [{montage}] perm kappa={np.mean(shifts):.3f}", flush=True)
 
@@ -186,7 +240,8 @@ def main() -> int:
     print(f"\nwrote {args.out}")
 
     if perm_rows:
-        perm_out = Path("results/perm_control_sleep_staging_local.csv")
+        perm_out = args.perm_out
+        perm_out.parent.mkdir(parents=True, exist_ok=True)
         pd.DataFrame(perm_rows).to_csv(perm_out, index=False)
         print(f"wrote {perm_out}")
 
@@ -207,6 +262,38 @@ def main() -> int:
         print(f"\npaired ear_6 - scalp_6: n={n} mean={mean:+.3f} "
               f"95% CI [{mean - half:+.3f}, {mean + half:+.3f}]")
         print(delta.rename("delta").to_string())
+
+    # --- the same comparison with each montage's own null removed ----------
+    # If the control does not sit at chance, and does not sit at the *same*
+    # place for both montages, the raw pairing measures the null's montage
+    # dependence as much as the site effect. Subtracting each montage's own
+    # per-night null is a crude bias correction (kappa is not linear), but a
+    # comparison that only survives without it is not a site result.
+    if perm_rows and {"scalp_6_k6", "ear_6_k6"}.issubset(pivot.columns):
+        pr = pd.DataFrame(perm_rows)
+        pk = pr.pivot_table(index="subject", columns="montage", values="perm_mean")
+        nulls = pk.copy()
+        nulls.index = [str(i) for i in nulls.index]
+        real = pivot.copy()
+        real.index = [str(i) for i in real.index]
+        if {"scalp_6", "ear_6"}.issubset(nulls.columns):
+            for a, b in (("ear_6_k6", "scalp_6_k6"),):
+                corr = ((real[a] - nulls["ear_6"]) -
+                        (real[b] - nulls["scalp_6"])).dropna()
+                cn = len(corr)
+                from scipy import stats
+
+                chalf = (stats.t.ppf(0.975, cn - 1) * corr.std(ddof=1) / np.sqrt(cn)
+                         if cn >= 2 else float("nan"))
+                print(f"\n\t(null-corrected) {a} - {b}: n={cn} "
+                      f"mean={corr.mean():+.3f} 95% CI "
+                      f"[{corr.mean() - chalf:+.3f}, {corr.mean() + chalf:+.3f}] "
+                      f"| nulls: ear {nulls['ear_6'].mean():+.3f} "
+                      f"scalp {nulls['scalp_6'].mean():+.3f}")
+                print("  a comparison that only survives without the correction "
+                      "is a null artifact, not a site effect")
+        print(pr.groupby("subset")["perm_mean"]
+              .agg(["mean", "min", "max"]).round(3).to_string())
 
     return 0
 

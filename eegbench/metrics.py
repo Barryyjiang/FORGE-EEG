@@ -52,6 +52,41 @@ def cohens_kappa(y_true, y_pred, *, n_classes: int | None = None) -> float:
     return float(cohen_kappa_score(y_true, y_pred))
 
 
+def auc_to_balanced_accuracy(auc: float) -> float:
+    """Balanced accuracy implied by an ROC-AUC, under a stated assumption.
+
+    Assumes two equal-variance Gaussian score distributions (the binormal
+    model) and an operating point at the equal-error threshold. Then
+    ``AUC = Phi(d / sqrt(2))`` and ``balanced accuracy = Phi(d / 2)`` for a
+    separation ``d``, so ``balanced accuracy = Phi(Phi^-1(AUC) / sqrt(2))``.
+
+    This is a **translation, not a measurement**. AUC tracks are never scored
+    with accuracy here, and ITR is still never derived from an AUC (see
+    :func:`eegbench.leaderboard._add_itr`); the number exists only so a delta
+    can be judged on the scale an operator experiences. It is wrong if the
+    two classes have different variances or the threshold is not at the
+    equal-error point.
+    """
+    from scipy.stats import norm
+
+    a = float(np.clip(auc, 1e-6, 1 - 1e-6))
+    return float(norm.cdf(norm.ppf(a) / np.sqrt(2.0)))
+
+
+def headroom_lost(score: float, reference: float, chance: float) -> float:
+    """Share of the above-chance margin a reduction gives up.
+
+    ``(reference - score) / (reference - chance)``. Unlike a raw delta this is
+    comparable across tasks whose chance levels differ (AUC 0.5, accuracy 1/n,
+    kappa 0), which is what makes "how bad is 5 points?" answerable. Returns
+    NaN when the reference has no headroom to lose.
+    """
+    span = float(reference) - float(chance)
+    if not np.isfinite(span) or span <= 0:
+        return float("nan")
+    return (float(reference) - float(score)) / span
+
+
 def pearson_r(y_true, y_pred) -> float:
     """Correlation. Standard for auditory attention / stimulus reconstruction."""
     from scipy.stats import pearsonr
@@ -79,13 +114,17 @@ CLASSIFICATION_ONLY = {"roc_auc", "accuracy"}
 def chance_level(metric: str, n_classes: int) -> float:
     """Chance performance for a metric.
 
-    ROC-AUC is 0.5 regardless of class count; accuracy is 1/n; kappa and
-    correlation are 0. Getting this wrong silently rescales an entire
-    leaderboard, so it lives here rather than inline.
+    ROC-AUC is 0.5 regardless of class count; accuracy and balanced accuracy are
+    1/n; kappa and correlation are 0. Getting this wrong silently rescales an
+    entire leaderboard, so it lives here rather than inline.
+
+    Balanced accuracy is kept distinct from accuracy on purpose: it is the metric
+    the FACED emotion track reports, and calling it "accuracy" in the CSV would
+    mislabel a class-balanced score as a raw one.
     """
     if metric == "roc_auc":
         return 0.5
-    if metric == "accuracy":
+    if metric in ("accuracy", "balanced_accuracy"):
         return 1.0 / max(n_classes, 1)
     return 0.0
 

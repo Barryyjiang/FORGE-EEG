@@ -137,12 +137,10 @@ The online docs are out of step with the source. These all cost time to discover
   1.13 → use `colin27_1005` (`montages.standard_positions()` handles both).
 - All four paradigms (`SSVEP`, `P300`, `LeftRightImagery`, `CVEP`) accept
   `channels=`. That is the hook the whole sweep hangs on.
-- **c-VEP is not classification-ready with `CVEP` + LogVar/LDA.**
-  `Thielen2021.event_id == {'1.0': 101, '0.0': 100}` — those are stimulus
-  *bit* on/off markers, not the 20 speller symbols. `CVEP` therefore produces a
-  binary problem (`n_classes=2` in the results), and LogVar+LDA sits at ROC-AUC
-  0.5 by construction. c-VEP needs template matching / CCA / reconvolution
-  (the original paper's encoding model), or benchmark a different paradigm.
+- **c-VEP is outside this benchmark.** `Thielen2021.event_id ==
+  {'1.0': 101, '0.0': 100}` exposes stimulus-bit markers, not command labels, so
+  a generic pipeline is not a valid c-VEP decoder. The task was removed rather
+  than reported with a lower-bound caveat.
 - **`Lee2021Mobile` channel names are only knowable after downloading.** It
   reads BrainVision files directly and does not rename channels; its metadata
   omits `sensors`. The ear electrodes are not 10-10 names, so they cannot enter
@@ -172,8 +170,14 @@ The online docs are out of step with the source. These all cost time to discover
 | `thielen2021.py`    | Real 8-channel optimised montage (`Fpz Iz O1 O2 Oz POz T7 T8`). |
 | `thielen2015.py`    | 64-channel c-VEP. Dense reference for the same lab and paradigm. |
 
-## Open decisions
+## Scope decisions (closed)
 
-- [ ] Target paradigm — determines which "region" is the fair comparison.
-- [ ] Whether to hold model capacity fixed across channel counts.
-- [ ] Tier 2: forward model (MNE `simulate_raw` vs SimNIBS lead fields).
+- [x] Nine tasks: motor imagery (two and four classes), P300, SSVEP, motor
+      execution, sleep staging, cognitive workload, auditory attention, emotion
+      recognition.
+- [x] One fixed classical decoder per task; no per-montage tuning.
+- [x] Physically measured wearable electrodes wherever the dataset has them. The
+      one exception is the workload headset, which has no ear recording: its
+      frontal sets are scalp proxies and are marked `fidelity: proxy` in every
+      result file rather than reported as a device.
+- [x] Forward-model simulation is out of scope for this benchmark.

@@ -40,6 +40,11 @@ def build_specs(
 
     if wearables:
         for montage in WEARABLES.values():
+            # Only physically measured wearable electrodes. Geometry proxies
+            # (nearest 10-10 rings for cEEGrid/earbud/headband) are not device
+            # measurements and are deliberately not part of the benchmark.
+            if montage.fidelity != "measured":
+                continue
             spec = wearable_spec(montage, available)
             if spec is not None:
                 specs.append(spec)

@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, cite it and the original datasets."
+title: "The Electrode Budget: A Wearable Centric EEG Benchmark"
+abstract: >-
+  A matched-channel benchmark of seven EEG paradigms on seven public datasets.
+  It separates electrode count from electrode placement by holding the channel
+  budget and the decoder fixed, and compares montages that use physically
+  recorded wearable electrodes where a dataset has them.
+authors:
+  - family-names: Jiang
+    given-names: Barry
+  - family-names: Broor
+    given-names: Mishti
+  - family-names: Mustafa
+    given-names: Sammy
+  - family-names: Ahmad
+    given-names: Fyzeen
+  - family-names: Tran
+    given-names: Chau
+type: software
+license: MIT
+repository-code: "https://github.com/Barryyjiang/FORGE-EEG"
+keywords:
+  - EEG
+  - brain-computer interface
+  - wearable
+  - benchmark
+  - electrode montage
+  - ear-EEG

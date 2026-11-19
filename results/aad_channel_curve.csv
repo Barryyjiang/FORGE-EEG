@@ -1,0 +1,15 @@
+track,setup,k,subset,channels,score_mean,score_sem,n,trial_seconds,metric,chance
+auditory_attention_earsaad,around_ear,2,around_ear_2,"cER1,cEL5",0.6641975308641975,0.02605577627431942,15,60.0,accuracy,0.5
+auditory_attention_earsaad,around_ear,4,around_ear_4,"cER1,cEL5,cER10,cEL1",0.6777777777777777,0.02463397211456618,15,60.0,accuracy,0.5
+auditory_attention_earsaad,around_ear,8,around_ear_8,"cER1,cEL5,cER10,cEL1,cEL9,cER5,cEL3,cEL7",0.6740740740740742,0.026363156177855087,15,60.0,accuracy,0.5
+auditory_attention_earsaad,around_ear,12,around_ear_12,"cER1,cEL5,cER10,cEL1,cEL9,cER5,cEL3,cEL7,cER7,cER3,cEL2,cEL8",0.6814814814814815,0.029319363177871403,15,60.0,accuracy,0.5
+auditory_attention_earsaad,around_ear,19,around_ear_19,"cER1,cEL5,cER10,cEL1,cEL9,cER5,cEL3,cEL7,cER7,cER3,cEL2,cEL8,cEL4,cEL6,cER8,cER2,cER9,cER4,cER6",0.6888888888888888,0.02706009984929734,15,60.0,accuracy,0.5
+auditory_attention_earsaad,in_ear,2,in_ear_2,"ELA,ERI",0.5530864197530864,0.01584457573646853,15,60.0,accuracy,0.5
+auditory_attention_earsaad,in_ear,4,in_ear_4,"ELA,ERI,ELT,ERT",0.6172839506172839,0.025727806037122353,15,60.0,accuracy,0.5
+auditory_attention_earsaad,in_ear,8,in_ear_8,"ELA,ERI,ELT,ERT,ELC,ERA,ERB,ELB",0.6185185185185187,0.02211910230514681,15,60.0,accuracy,0.5
+auditory_attention_earsaad,in_ear,12,in_ear_12,"ELA,ERI,ELT,ERT,ELC,ERA,ERB,ELB,ELE,ERE,ELI,ERC",0.625925925925926,0.021776841933604952,15,60.0,accuracy,0.5
+auditory_attention_earsaad,scalp,2,scalp_2,"Cz,Fp2",0.6530864197530862,0.022749955525411755,15,60.0,accuracy,0.5
+auditory_attention_earsaad,scalp,4,scalp_4,"Cz,Fp2,P7,P8",0.7308641975308643,0.024704581996731777,15,60.0,accuracy,0.5
+auditory_attention_earsaad,scalp,8,scalp_8,"Cz,Fp2,P7,P8,F7,FC6,Fz,C3",0.8098765432098766,0.025967884079168065,15,60.0,accuracy,0.5
+auditory_attention_earsaad,scalp,12,scalp_12,"Cz,Fp2,P7,P8,F7,FC6,Fz,C3,Pz,P4,P3,O2",0.8049382716049382,0.031451207908288877,15,60.0,accuracy,0.5
+auditory_attention_earsaad,scalp,19,scalp_19,"Cz,Fp2,P7,P8,F7,FC6,Fz,C3,Pz,P4,P3,O2,O1,T7,Fp1,F3,C4,CP1,CP2",0.817283950617284,0.026490863440038488,15,60.0,accuracy,0.5

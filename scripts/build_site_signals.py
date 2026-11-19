@@ -279,54 +279,119 @@ def sleep() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# c-VEP: a real code-modulated trial
+# Cognitive workload: rest vs multitasking spectrum at one frontal electrode
 # ---------------------------------------------------------------------------
 
-def cvep() -> dict:
-    from eegbench.datasets import configure_download_provider
+def stew() -> dict:
+    import io
+    import zipfile
 
-    configure_download_provider("upstream")
-    from moabb.datasets import CastillosCVEP40
+    from scipy.signal import butter, sosfiltfilt, welch
 
-    dataset = CastillosCVEP40()
-    dataset.subject_list = [1]
-    data = dataset.get_data([1])
-    run = next(iter(next(iter(data[1].values())).values()))
-    sfreq = run.info["sfreq"]
-    stim = run.get_data(picks=["stim_trial"])[0]
-    bits = run.get_data(picks=["stim_epoch"])[0]
-    onsets = np.flatnonzero((stim[:-1] == 0) & (stim[1:] != 0)) + 1
+    path = ROOT / "data" / "stew_raw" / "STEW Dataset.zip"
+    sos = butter(4, [1.0, 30.0], btype="bandpass", fs=128, output="sos")
+    with zipfile.ZipFile(path) as z:
+        names = {n.rsplit("/", 1)[-1]: n for n in z.namelist()}
+        traces = []
+        for cond in ("lo", "hi"):
+            raw = np.loadtxt(io.BytesIO(z.read(names[f"sub01_{cond}.txt"])))
+            # Column 0 is AF3, the electrode the glasses-like montage keeps.
+            traces.append(sosfiltfilt(sos, raw, axis=0)[:, 0])
 
-    # Pick an onset with a full two seconds of data after it.
-    onset = next(o for o in onsets if o + int(2.0 * sfreq) < run.n_times)
-    start = onset / sfreq
-    seg = run.copy().crop(start, start + 2.0).load_data()
-    seg.filter(1.0, 30.0, verbose=False)
-    picks = [c for c in ("Oz", "O1", "O2") if c in seg.ch_names]
-    data_arr = seg.get_data(picks=picks) * 1e6
-    t = np.arange(data_arr.shape[1]) / sfreq
-    # stim_epoch carries the binary code (100/101); stim_trial is only a
-    # single-sample command id at onset.
-    code = (bits[onset:onset + int(2.0 * sfreq)] == 101).astype(float)
+    f, p = welch(np.stack(traces), fs=128, nperseg=1024, axis=1)
+    keep = (f >= 1.0) & (f <= 30.0)
+    db = 10.0 * np.log10(p[:, keep] * 1e12 + 1e-12)
+    return {
+        "type": "spectrum",
+        "title": "Rest vs multitasking, one electrode",
+        "unit": "dB (re 1 ÂµVÂ²/Hz)",
+        "xLabel": "frequency (Hz)",
+        "series": [
+            _series("Rest", db[0], f[keep], n=int(keep.sum()), role="muted"),
+            _series("Multitask", db[1], f[keep], n=int(keep.sum()),
+                    role="accent"),
+        ],
+        "highlightFreqs": [10.0],
+        "source": "STEW, subject 01, electrode AF3, whole 150 s recordings",
+        "note": "The multitasking recording carries more power above ~13 Hz "
+                "(muscle and movement) and a weaker alpha peak. The decoder "
+                "reads band power, so these differences are its input â€” and "
+                "they are also why rest-vs-task is easier than it looks.",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Auditory attention: 60 s accuracy per setup, from the results table
+# ---------------------------------------------------------------------------
+
+def earsaad() -> dict:
+    path = (ROOT / "results" / "benchmark"
+            / "auditory_attention_earsaad__within_session.csv")
+    df = pd.read_csv(path)
+    df = df[df["trial_seconds"] == 60.0]
+    order = [
+        ("scalp_29_k29", "Scalp 29", "scalp"),
+        ("scalp_19_k19", "Scalp 19", "scalp"),
+        ("scalp_12_k12", "Scalp 12", "scalp"),
+        ("around_ear_19_k19", "Around-ear 19", "ear"),
+        ("in_ear_12_k12", "In-ear 12", "ear"),
+    ]
+    items = []
+    for key, label, group in order:
+        g = df[df["subset"] == key]["score"]
+        items.append({
+            "label": label,
+            "value": round(float(g.mean()), 3),
+            "sd": round(float(g.std()), 3),
+            "group": group,
+        })
 
     return {
-        "type": "trace_code",
-        "title": "Code-modulated flicker",
-        "unit": "µV",
-        "xLabel": "time from trial onset (s)",
-        "series": [
-            _series(name, data_arr[i], t, n=220,
-                    role=("accent" if name == "Oz" else "muted"))
-            for i, name in enumerate(picks[:2])
-        ],
-        "code": {
-            "t": _round(_downsample(t, 160), 3),
-            "values": [int(v) for v in _downsample_bits(code, 160)],
-        },
-        "source": "Castillos c-VEP 40, subject 1, one trial",
-        "note": "The step line is the binary stimulus code. The EEG response "
-                "follows the code; a template-matching decoder would correlate "
-                "the response with each candidate sequence.",
+        "type": "bars",
+        "title": "Decoding a followed voice, 60 s windows",
+        "unit": "Accuracy",
+        "chance": 0.5,
+        "items": items,
+        "source": "Ear-SAAD, 15 subjects, leave-one-trial-out, 60 s decisions",
+        "note": "Grey bars are scalp references trimmed to the same channel "
+                "count as the ear arrays, so the scalp-vs-ear gap is not a "
+                "channel-count gap. Whiskers are Â±1 s.d. across subjects.",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Emotion: 60 s accuracy per setup, from the results table
+# ---------------------------------------------------------------------------
+
+def faced() -> dict:
+    path = (ROOT / "results" / "benchmark"
+            / "faced_emotion_123__within_session.csv")
+    df = pd.read_csv(path)
+    cohort = (df.drop_duplicates("subset").set_index("subset")["cohort_score"])
+    order = [
+        ("full_k30", "Full 30", "scalp"),
+        ("posterior_4_k4", "Posterior 4", "scalp"),
+        ("glasses_4_k4", "Glasses-like 4", "proxy"),
+        ("temporal_4_k4", "Temporal 4", "proxy"),
+    ]
+    items = []
+    for key, label, group in order:
+        items.append({
+            "label": label,
+            "value": round(float(cohort[key]), 3),
+            "sd": None,
+            "group": group,
+        })
+    return {
+        "type": "bars",
+        "title": "Positive vs negative valence, by placement",
+        "unit": "Balanced accuracy",
+        "chance": 0.5,
+        "items": items,
+        "source": "FACED, 123 participants, participant-disjoint CV, 4 s windows",
+        "note": "Every bar is close to chance, and that is the finding: the effect "
+                "is real but small. The best four electrodes are posterior, not "
+                "the frontal sites a glasses frame would use.",
     }
 
 
@@ -336,7 +401,9 @@ SIGNALS = {
     "ssvep": ssvep,
     "motor_auc": motor_auc,
     "sleep": sleep,
-    "cvep": cvep,
+    "stew": stew,
+    "earsaad": earsaad,
+    "faced": faced,
 }
 
 

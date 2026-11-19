@@ -1,20 +1,27 @@
 # The Electrode Budget — GitHub Pages site
 
-The benchmark now has a static, dependency-free website under `docs/`. It is
-designed for people outside EEG: each task gets a plain-language explanation,
-a real signal illustration, and an interactive montage explorer.
+The benchmark publishes two static pages under `docs/`, with no build step on
+the server and no runtime dependency beyond the files in this repository:
+
+| URL | Page | Source |
+|---|---|---|
+| `/` | **Summary page** — the question, four findings, three figures, two tables | `paper/paper.html` + generated numbers |
+| `/explore/` | **Interactive explorer** — every montage, per-decoder, head maps | `docs/explore/index.html` + `assets/app.js` |
+
+`.nojekyll` is present so GitHub serves the JSON, PNG and PDF files unchanged.
 
 ## Preview locally
 
 ```powershell
 .\.venv\Scripts\python.exe -m http.server 8000 --directory docs
-# open http://localhost:8000
+# open http://localhost:8000          (paper page)
+# open http://localhost:8000/explore/ (interactive explorer)
 ```
 
-The page needs an HTTP server (it fetches JSON). Opening `docs/index.html`
+Both pages need an HTTP server (they read JSON). Opening the HTML files
 directly will not work because browsers block `fetch()` on `file://`.
 
-Useful query parameters while editing:
+Explorer query parameters while editing:
 
 ```
 ?static=1          reveal all sections (good for screenshots/printing)
@@ -27,8 +34,8 @@ Useful query parameters while editing:
 
 ## Publish it
 
-This directory is already a git checkout with an initial commit. Create an
-empty repository on GitHub, then from the project root:
+This directory is already a git checkout. Create an empty repository on GitHub,
+then from the project root:
 
 ```powershell
 git remote add origin https://github.com/<you>/<repo>.git
@@ -44,86 +51,146 @@ Then on GitHub:
 
 The workflow in `.github/workflows/pages.yml` uploads `docs/` as the site.
 
-- If the repo is named `<you>.github.io`, the site is
-  `https://<you>.github.io/`.
+- If the repo is named `<you>.github.io`, the site is `https://<you>.github.io/`.
 - Otherwise it is `https://<you>.github.io/<repo>/`.
-- All links in the site are relative, so it works from either path.
+- All links in both pages are relative, so they work from either path.
 
-`.nojekyll` is present so GitHub serves the JSON and SVG files unchanged.
+### Author, affiliation and repository URL
+
+These are set, not placeholders:
+
+| Field | Where |
+|---|---|
+| author names and affiliation | `paper/paper.html` (masthead + JSON-LD) **and** `AUTHORS` / `AFFILIATION` in `scripts/build_paper.py` |
+| `REPO_URL` | `scripts/build_paper.py` (Code button + BibTeX) |
+| the BibTeX entry (`bibtex()` in `scripts/build_paper.py`) | the `#cite` section |
+
+Edit both places for the names: the template carries the visible masthead and the
+generator carries the citation, and the build does not cross-check them. Re-run
+`scripts/build_paper.py` after editing; nothing else needs to change.
 
 ## What is in `docs/`
 
 ```
 docs/
-├── index.html              page structure and editorial copy
+├── index.html                    the summary page (generated)
+├── explore/index.html            the interactive explorer (hand-written)
 ├── assets/
-│   ├── styles.css          light/dark themes + responsive layout
-│   ├── app.js              SVG charts, head maps, explorer
-│   └── favicon.svg
+│   ├── paper.css, paper.js       paper-page styles and interactions
+│   ├── styles.css, app.js        explorer styles and charts
+│   ├── favicon.svg
+│   └── figures/                  paper figures: PNG (page) + PDF (vector)
 ├── data/
-│   ├── benchmark.json      every result, generated from results/benchmark/
-│   └── signals.json        real EEG illustrations, generated from data/
+│   ├── benchmark.json            every result, generated from results/benchmark/
+│   └── signals.json              real EEG illustrations, generated from data/
 └── .nojekyll
 ```
 
-Nothing in the HTML is hand-transcribed from the benchmark. The numbers come
-from `docs/data/benchmark.json`, which is written by:
+## How the numbers stay honest
+
+### The page is a summary, on purpose
+
+The published page answers one question in about 1,600 words: *how much EEG
+accuracy survives when a lab cap becomes a wearable, and how much of that is
+about where the electrodes sit rather than how many there are.* It carries three
+figures (the headline, the placement result, the paired wearable comparison) and
+two tables (the nine tasks, and the confound/reproduction checks). Everything
+else — per-montage tables, per-decoder comparisons, the channel-budget curves,
+the full permutation-control table — lives in `results/REPORT.md` and the
+explorer, which the page links to.
+
+`paper/paper_full.html` is the long-form version the summary was cut from: design,
+per-task results, validity, discussion and limitations. It is **not built** and
+its inline numbers are frozen at the moment it was archived. To publish it, point
+`TEMPLATE` in `scripts/build_paper.py` at that file and give it its own output
+path; the placeholders and tables are unchanged.
+
+Nothing on the paper page is hand-transcribed: its tables, figures and inline
+statistics are written by the generators from `results/benchmark/`. The explorer
+page is hand-written HTML around a generated data bundle, and its prose quotes a
+few numbers directly (for example the P300 interval in `docs/assets/app.js`).
+Those are checked against the bundle whenever the prose changes, so the
+generated pages and `results/REPORT.md` are authoritative if the two disagree.
 
 ```powershell
+# 1. benchmark, sleep, controls, signal quality, report
+.\.venv\Scripts\python.exe scripts\run_all.py
+
+# 2. site bundle: docs/data/benchmark.json  (raw datasets not needed)
 .\.venv\Scripts\python.exe scripts\build_site.py
-```
 
-That script reads `results/benchmark/*.csv`, `results/perm_control_*.csv` and
-`results/signal_quality_bnci.csv`, adds the task metadata and electrode
-positions, and writes the JSON bundle. The raw datasets are not needed.
+# 3. paper figures: docs/assets/figures/*.png + *.pdf
+.\.venv\Scripts\python.exe figures\build_figures.py
 
-The real-data illustrations (one trial, one ERP average, one spectrum, one
-hypnogram) are generated once with:
+# 4. paper page: docs/index.html  (reads paper/paper.html + the bundle + the CSVs)
+.\.venv\Scripts\python.exe scripts\build_paper.py
 
-```powershell
+# 5. optional: real EEG illustrations for the explorer
 .\.venv\Scripts\python.exe scripts\build_site_signals.py
 ```
 
-They are then committed, so a fresh clone can build the page without the
-multi-gigabyte datasets. Re-run the signal script only if you change the
-illustration selection.
+The paper template carries the prose and the placeholders; the generator fills
+in tables, inline statistics and the BibTeX block, and fails loudly on an
+unknown placeholder or a missing asset:
 
-## Updating the site after a benchmark run
+| Placeholder | Meaning |
+|---|---|
+| `{{table:NAME}}` | a generated table (`TASKS`, `DECODERS`, `RESULTS`, `WEARABLE`, `CONTROLS`) |
+| `{{stat:track:field}}` | one headline number for a task, e.g. `{{stat:p300_8ch:retainedPct}}` |
+| `{{cell:track:subset:field}}` | one aggregate cell, e.g. `{{cell:ssvep_8ch:distributed_k4:score}}` |
+| `{{pair:name:field}}` | a paired comparison, e.g. `{{pair:inear_vs_senso:delta}}` |
+| `{{meta:field}}` | a bundle metadata field (`nTasks`, `nRows`, `nExamples`, …) |
+| `{{generated}}`, `{{repo}}`, `{{bibtex}}` | build date, repository URL, citation |
 
-```powershell
-# 1. regenerate the benchmark tables (as usual)
-.\.venv\Scripts\python.exe scripts\report.py
+If a result changes meaning rather than value (new task, new decoder, new scope
+note), update the matching entry in `TASKS` inside `scripts/build_site.py`, the
+prose in `paper/paper.html`, and — if the comparison is new — the paired block in
+`named_pairs()` inside `scripts/build_paper.py`.
 
-# 2. regenerate the site's data bundle
-.\.venv\Scripts\python.exe scripts\build_site.py
+## Figures
 
-# 3. commit docs/data/benchmark.json (and any legitimate result CSVs)
-git add docs/data/benchmark.json results/benchmark
-git commit -m "Update benchmark site data"
-git push
+`figures/` is a small matplotlib toolkit in the style of
+[figures4papers](https://github.com/ChenLiu-1996/figures4papers) (semantic
+palette, spines off, frameless legends, 300 dpi PNG + vector PDF):
+
+```
+figures/
+├── figure_style.py      palette, FigureStyle preset, plot helpers, export
+├── paper_data.py        bundle + raw-CSV access, paired statistics
+├── eeg_maps.py          top-down head maps from the bundle's electrode positions
+├── plot_fig1_overview.py … plot_fig6_controls.py
+└── build_figures.py     rebuild every figure (--only fig4 to build one)
 ```
 
-If a result changes meaning rather than just value (new track, new decoder,
-new caveat), update the matching entry in `TASKS` inside
-`scripts/build_site.py` and the prose in `docs/index.html`.
+Each script reads only `docs/data/benchmark.json` and `results/benchmark/*.csv`,
+so the figures rebuild without the raw multi-gigabyte datasets.
 
 ## Editing notes
 
-- **Colours** live as CSS variables at the top of `docs/assets/styles.css`;
-  the SVG charts use the same variables so light/dark mode needs no redraw.
+- **Theme.** The paper page is **light by default**, because a paper is read on
+  white. Readers can switch with the sun/moon button in the header (remembered in
+  `localStorage` under `eegbench-paper-theme`), or open it directly dark with
+  `?theme=dark`. The theme is resolved by a small inline script in
+  `paper/paper.html` before first paint, so there is no flash. The explorer keeps
+  its own toggle and follows the system preference on a first visit.
+- **Colours** live as CSS variables at the top of `docs/assets/paper.css` and
+  `docs/assets/styles.css`. The matplotlib palette is in
+  `figures/figure_style.py` (`PALETTE`, `COLORS`), so figures and page follow the
+  same semantics: blue = reference/full cap, green = sensorimotor, red = in-ear
+  and ear, neutral = random subsets.
 - **Electrode maps** are drawn from `docs/data/benchmark.json` → `positions`.
   Scalp positions come from MNE's 10-5 montage; ear labels are schematic.
-- **Chance is task-aware.** The site does not rely on the older leaderboard's
-  per-row chance column, which cannot infer a metric for the pre-`metric`
-  CSVs. It uses the task definition: ROC-AUC 0.5, accuracy 1/n, κ 0.
-- **No chart library.** Everything is hand-drawn SVG, so the page has no
-  JavaScript dependency beyond `app.js` and loads quickly.
+- **Chance is task-aware.** ROC-AUC 0.5, accuracy 1/n, Cohen's κ 0.
+- **The paper page prints itself.** The "Print / PDF" button uses a print
+  stylesheet; `Ctrl+P` from the paper page gives a clean PDF without extra tools.
+- **No chart library and no CDN.** Everything is hand-drawn SVG or committed
+  PNG/PDF, so the pages load from a plain static host.
 
 ## Suggested repository metadata
 
 - Description: *How much EEG accuracy survives when a lab cap becomes a
-  wearable? A montage benchmark across six public datasets.*
+  wearable? A montage benchmark across eight public datasets and nine tasks.*
 - Topics: `eeg`, `brain-computer-interface`, `wearable`, `benchmark`,
   `neuroscience`, `moabb`
-- Social preview: use a screenshot of the hero section (`docs/_preview` files
-  are not committed; take one with `?static=1&theme=light`).
+- Social preview: use `docs/assets/figures/fig1_overview.png` (already wired as
+  the Open Graph image of the paper page).

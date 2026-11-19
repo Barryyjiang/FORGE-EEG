@@ -1,0 +1,4 @@
+setup,ours_pct,paper_full_pct,paper_no_cleanup_pct,delta_vs_full,delta_vs_no_cleanup,closer_to,margin_pts
+scalp_29,83.7,83.44,86.11,0.26,-2.41,full,2.14
+around_ear_19,68.89,67.22,64.89,1.67,4.0,full,2.33
+in_ear_12,62.59,61.11,58.78,1.48,3.81,full,2.33

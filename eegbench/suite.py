@@ -6,11 +6,16 @@ deliberately declarative: adding a dataset or a protocol is a data change, not
 new code, which is what makes the benchmark extensible instead of a pile of
 bespoke scripts.
 
-Tracks carry a ``status``:
+Every track in the suite is ``ready`` and backed by a result CSV in
+``results/benchmark/``. Incomplete or out-of-scope paradigms are not listed:
+a public benchmark should not ship rows that are explicitly labelled
+"not tested".
 
-- ``ready``           runs here today
-- ``needs_download``  defined, not yet fetched (size noted)
-- ``excluded``        known-unsuitable; kept visible so nobody re-adds it
+The suite covers four of the five published tasks. The fifth, sleep staging, is
+not a MOABB paradigm: it is read from a BIDS recording and defined in
+``scripts/sleep_track.py``, which writes
+``results/benchmark/sleep_staging_local__within_session.csv`` in the same schema
+so the leaderboard treats it like any other track.
 """
 
 from __future__ import annotations
@@ -94,6 +99,23 @@ SUITE: tuple[Track, ...] = (
              "source is known. ~1.1 GB for all 9 subjects.",
     ),
     _t(
+        name="mi_4class_22ch",
+        dataset="bnci2014_001",
+        paradigm="motor",
+        ks=(4, 8, 16),
+        wearables=False,
+        # Four classes need a selection accuracy, so AUC is not the metric and
+        # chance is 1/4 rather than 1/2.
+        metric="accuracy",
+        scorer="accuracy",
+        paradigm_kwargs={"n_classes": 4},
+        note="The same cap and the same nine people as mi_leftright_22ch, but "
+             "four classes (left hand, right hand, feet, tongue). Class count is "
+             "the axis this track adds: feet and tongue are midline and central, "
+             "so a lateralised sensorimotor patch should lose far more here than "
+             "it does on two classes. Reuses the cached BNCI2014_001 download.",
+    ),
+    _t(
         name="p300_8ch",
         dataset="bnci2014_008",
         paradigm="p300",
@@ -109,7 +131,7 @@ SUITE: tuple[Track, ...] = (
         paradigm="ssvep",
         ks=(4, 8),
         wearables=False,
-        note="6-class SSVEP, 8 electrodes. Accuracy is scored (not AUC) so that "
+        note="12-class SSVEP, 8 electrodes. Accuracy is scored (not AUC) so that "
              "ITR is computable: this is the paradigm where bits/min, not AUC, "
              "decides whether a wearable is usable.",
         metric="accuracy",
@@ -118,79 +140,14 @@ SUITE: tuple[Track, ...] = (
         return_epochs=True,
     ),
     _t(
-        name="cvep_trial_level",
-        dataset="castillos_cvep40",
-        paradigm="cvep",
-        ks=(8, 16),
-        status="excluded",
-        note="Excluded after verification: the CVEP paradigm returns 2 classes "
-             "('0','1' stimulus bits, 7020 epochs) even for datasets that ship "
-             "trial-level command labels. Command-level c-VEP needs custom "
-             "epoching from the dataset's internal cvep_data, which MOABB does "
-             "not expose as events. Verified 2026-11 on CastillosCVEP40.",
-    ),
-    _t(
-        name="sleep_staging_ear",
-        dataset="openneuro_ds004348",
-        paradigm="fixed_interval_windows",
-        status="needs_adapter",
-        task_type="regression",
-        metric="kappa",
-        pipelines=("bandpower_ridge",),
-        note="Ear-EEG sleep staging (OpenNeuro ds004348, 9 subjects, 14 ear "
-             "electrodes). The canonical wearable continuous task — and the one "
-             "task family where ear-EEG has strong published results. Missing: "
-             "no MOABB dataset and no fixed-interval paradigm that emits a "
-             "continuous hypnogram target. Needs a BIDS adapter (~50 lines) "
-             "plus annotation parsing; the metric and regression decoder are "
-             "already in place.",
-    ),
-    _t(
         name="motor_execution_ear_vs_scalp",
         dataset="wu2020",
         paradigm="leftright",
         ks=(8,),
         wearables=True,
         promote=WU2020_EAR,
-        note="Simultaneous 122-channel cap + 8 in-ear electrodes. The only "
-             "ready track where 'wrong site' is testable directly. ~8 GB.",
-    ),
-    _t(
-        name="ssvep_mobile_ear",
-        dataset="lee2021_ssvep",
-        paradigm="ssvep",
-        ks=(4, 8, 16),
-        wearables=True,
-        status="needs_download",
-        note="32 scalp + 14 ear while standing/walking/running. Ear channel "
-             "names are only knowable after download.",
-        appro_download="multi-GB",
-    ),
-    _t(
-        name="p300_mobile_ear",
-        dataset="lee2021_erp",
-        paradigm="p300",
-        ks=(4, 8, 16),
-        wearables=True,
-        status="needs_download",
-        note="Same rig, ERP paradigm. Pairs with the SSVEP track.",
-        appro_download="multi-GB",
-    ),
-    _t(
-        name="cvep_dense_vs_lowchannel",
-        dataset="thielen2015",
-        paradigm="cvep",
-        status="excluded",
-        note="Excluded: Thielen event ids are stimulus bit on/off, so CVEP "
-             "yields 2 classes and LogVar/LDA sits at AUC 0.5 by construction. "
-             "Needs template matching / CCA before it is a classification task.",
-    ),
-    _t(
-        name="cvep_lowchannel",
-        dataset="thielen2021",
-        paradigm="cvep",
-        status="excluded",
-        note="Same c-VEP event-marker problem as thielen2015.",
+        note="Simultaneous 115-channel scalp EEG cap + 8 in-ear electrodes. "
+             "The only track where 'wrong site' is testable directly. ~8 GB.",
     ),
 )
 

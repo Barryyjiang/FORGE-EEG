@@ -3,38 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A benchmark for EEG electrode subsets: how much accuracy survives when a lab cap becomes a wearable, and how much depends on where the electrodes sit.">
-  <meta name="theme-color" content="#f5f6f1">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="The Electrode Budget — an EEG wearable benchmark">
-  <meta property="og:description" content="How much EEG accuracy survives when a 128-channel lab cap becomes a 2–8 electrode wearable? Six tasks, real signals, and an interactive montage explorer.">
-  <meta name="twitter:card" content="summary">
-  <title>The Electrode Budget — an EEG wearable benchmark</title>
+  <title>The Electrode Budget: A Wearable Centric EEG Benchmark</title>
+  <meta name="description" content="How much EEG accuracy survives when a lab cap becomes a wearable? A matched-channel benchmark of nine tasks on eight public datasets, separating electrode count from electrode placement.">
+  <meta name="author" content="Barry Jiang, Mishti Broor, Sammy Mustafa, Fyzeen Ahmad, Chau Tran">
+  <meta name="theme-color" content="#0f4d92">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="The Electrode Budget: A Wearable Centric EEG Benchmark">
+  <meta property="og:description" content="How much EEG accuracy survives when a lab cap becomes a wearable? Nine tasks, eight public datasets, one fixed decoder per task, exactly k electrodes on each side of every comparison.">
+  <meta property="og:image" content="assets/figures/fig1_overview.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/paper.css">
+  <script>
+    /* Resolve the theme before first paint: light is the default, ?theme=dark or
+       a remembered choice overrides it. See assets/paper.js (theme toggle). */
+    (function () {
+      var requested = new URLSearchParams(location.search).get("theme");
+      try { requested = requested || localStorage.getItem("eegbench-paper-theme"); } catch (e) {}
+      document.documentElement.dataset.theme = requested === "dark" ? "dark" : "light";
+    })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "name": "The Electrode Budget: A Wearable Centric EEG Benchmark",
+    "author": [{"@type": "Person", "name": "Barry Jiang"}, {"@type": "Person", "name": "Mishti Broor"}, {"@type": "Person", "name": "Sammy Mustafa"}, {"@type": "Person", "name": "Fyzeen Ahmad"}, {"@type": "Person", "name": "Chau Tran"}],
+    "abstract": "How much EEG accuracy survives when a lab cap becomes a wearable? A matched-channel benchmark of nine tasks on eight public datasets, separating electrode count from electrode placement.",
+    "keywords": "EEG, brain-computer interface, wearable, benchmark, electrode montage, MOABB",
+    "isAccessibleForFree": true,
+    "datePublished": "2026-11-16"
+  }
+  </script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#answer">Skip to the answer</a>
 
-  <header class="site-header" id="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="#top" aria-label="The Electrode Budget, home">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".32"/>
-          <path d="M7 17c2.2 0 2.2-5 4.4-5s2.2 8 4.4 8 2.2-10 4.4-10 2.2 7 4.4 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          <circle cx="16" cy="16" r="2.1" fill="currentColor"/>
-        </svg>
-        <span>The Electrode Budget</span>
-      </a>
-      <nav class="site-nav" aria-label="Main navigation">
-        <a href="#what">The idea</a>
-        <a href="#tasks">Tasks</a>
-        <a href="#explorer">Results</a>
-        <a href="#findings">Findings</a>
-        <a href="#validation">Validity</a>
-        <a href="#methods">Methods</a>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="topbar-title" href="#top">The Electrode Budget</a>
+      <nav aria-label="Paper sections">
+        <a href="#question">Question</a>
+        <a href="#answer">Answer</a>
+        <a href="#results">Results</a>
+        <a href="#method">Method</a>
+        <a href="#limits">Limits</a>
+        <a href="#cite">Cite</a>
+        <a class="explore" href="explore/">Explorer&nbsp;↗</a>
       </nav>
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme">
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme" title="Switch between light and dark">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4.2"/>
           <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>
@@ -46,473 +63,315 @@
     </div>
   </header>
 
-  <main id="main">
-    <!-- ---------------------------------------------------------------- hero -->
-    <section class="hero" id="top">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow">EEG wearable benchmark · 2026</p>
-          <h1>How many electrodes does a wearable <em>actually</em> need?</h1>
-          <p class="lede">
-            A lab EEG cap has 64–128 electrodes. A consumer wearable has two to eight.
-            This benchmark fixes the number of electrodes and asks what is left:
-            how much accuracy comes from <strong>how many</strong> electrodes,
-            and how much from <strong>where they sit</strong>?
-          </p>
-          <div class="hero-actions">
-            <a class="button primary" href="#explorer">
-              Explore the results
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                <path d="M5 12h13M13 6l6 6-6 6"/>
-              </svg>
-            </a>
-            <a class="button ghost" href="#tasks">See the six tasks</a>
-          </div>
-          <ul class="hero-stats">
-            <li><strong>6</strong><span>task families</span></li>
-            <li><strong>43,864</strong><span>trials &amp; windows</span></li>
-            <li><strong>157</strong><span>montage × decoder cells</span></li>
-            <li><strong>5</strong><span>negative controls</span></li>
-          </ul>
-        </div>
+  <!-- ------------------------------------------------------------- masthead -->
+  <div class="masthead" id="top">
+    <div class="container">
+      <h1>The Electrode Budget:<br>A Wearable Centric EEG Benchmark</h1>
+      <p class="authors"><a href="#cite">Barry Jiang</a> · <a href="#cite">Mishti Broor</a> · <a href="#cite">Sammy Mustafa</a> · <a href="#cite">Fyzeen Ahmad</a> · <a href="#cite">Chau Trần</a></p>
+      <p class="affiliation">Northwestern University, Evanston, IL, USA</p>
 
-        <div class="hero-visual">
-          <div class="head-card">
-            <div id="hero-head" class="head-svg" aria-label="Top-down map of a 115-channel scalp cap with eight in-ear electrodes highlighted"></div>
-            <div class="head-legend">
-              <span class="legend-item"><span class="legend-dot" style="--dot: var(--accent)"></span>sensorimotor 8</span>
-              <span class="legend-item"><span class="legend-dot" style="--dot: var(--violet)"></span>in-ear 8</span>
-              <span class="legend-item"><span class="legend-dot ring" style="--dot: var(--ink-3)"></span>other scalp</span>
-            </div>
-            <p class="head-caption">115 scalp + 8 in-ear electrodes, recorded at the same time in Wu 2020.</p>
-          </div>
-        </div>
+      <nav class="paper-links" aria-label="Paper artefacts">
+        <a href="explore/">Interactive explorer</a>
+        <a href="#cite">BibTeX</a>
+        <a href="data/benchmark.json" download>Results data</a>
+        <a href="https://github.com/Barryyjiang/FORGE-EEG">Code</a>
+        <button type="button" data-print>Print / PDF</button>
+      </nav>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- ------------------------------------------------------------- question -->
+    <section id="question">
+      <div class="prose">
+        <h2><span class="num">1</span>The question</h2>
+        <p class="lede">
+          A lab EEG cap has 64 to 128 electrodes and cannot leave the lab. Smart
+          glasses and earbuds have two to eight. The trade is almost always argued
+          from electrode count alone — and that answers the wrong half of the
+          question.
+        </p>
+        <p>
+          Electroencephalography is used to study sleep, cognition and neurological
+          conditions, but a dense cap is cumbersome, intrusive and impractical for
+          everyday use. Wearable devices such as smart glasses and earbuds offer a
+          portable alternative with far fewer electrodes. That raises two questions
+          that are usually conflated: <strong>how much useful signal survives when
+          you use fewer sensors</strong>, and <strong>how much depends on where they
+          sit?</strong> Without separating the two, researchers and device developers
+          cannot tell which applications a wearable can actually support.
+        </p>
+        <p>
+          This benchmark separates them. Every comparison puts exactly <em>k</em>
+          electrodes on each side, so a difference between two montages is a
+          difference in placement and nothing else. Where a dataset recorded real
+          wearable electrodes alongside a scalp cap, those are the ones scored.
+        </p>
       </div>
     </section>
 
-    <!-- ------------------------------------------------------------ explainer -->
-    <section class="section" id="what">
-      <div class="container">
-        <div class="section-heading reveal">
-          <p class="eyebrow">The idea in ninety seconds</p>
-          <h2>An EEG cap is a spatial sampler. A wearable is a very small one.</h2>
-          <p>
-            EEG does not read thoughts. It records the summed electrical activity of
-            millions of neurons, blurred by the skull and scalp. The decoder’s job is to
-            find a pattern in that blur that reliably predicts what the person is doing.
-          </p>
-        </div>
+    <!-- --------------------------------------------------------------- teaser -->
+    <figure>
+      <a href="assets/figures/fig1_overview.pdf" title="Open the vector PDF">
+        <img src="assets/figures/fig1_overview.png" width="1600" height="921"
+             alt="Left: top-down map of a 115-channel scalp cap with eight sensorimotor electrodes in green and eight in-ear electrodes in red. Right: horizontal bars showing the percentage of each task's reference score retained by its best reduced montage.">
+      </a>
+      <figcaption>
+        <span class="label">Figure 1.</span> The shape of the answer.
+        <strong>(a)</strong> Wu 2020 recorded 115 usable scalp electrodes and eight
+        in-ear electrodes at the same time; green is the best eight scalp sites for
+        motor execution, red is the wearable.
+        <strong>(b)</strong> What each task keeps when its montage is cut down to its
+        best reduced set, as a percentage of that task's own reference.
+        Count is cheap almost everywhere. Placement is where the money goes.
+        <span class="hint">Click any figure for the vector PDF.</span>
+      </figcaption>
+    </figure>
 
-        <div class="steps reveal">
-          <article class="step-card">
-            <span class="step-number">1</span>
-            <svg class="step-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-              <path d="M24 7c-8 0-13 5.5-13 13 0 5 2.4 7.8 3.6 11.2.7 2 .4 4.8.4 7.8h18c0-3-.3-5.8.4-7.8C34.6 27.8 37 25 37 20c0-7.5-5-13-13-13Z"/>
-              <path d="M18 39h12M20 43h8M17 20c2 0 2-4 4-4s2 7 4 7 2-9 4-9 2 6 4 6" stroke-linecap="round"/>
-            </svg>
-            <h3>The brain makes electricity</h3>
-            <p>When neurons fire together, their voltages add up. At the scalp the result is
-              millionths of a volt — tiny, but measurable with a good amplifier.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">2</span>
-            <svg class="step-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-              <circle cx="24" cy="23" r="14"/>
-              <path d="M24 9v3M24 34v3M10 23h3M35 23h3" stroke-linecap="round"/>
-              <circle cx="18" cy="18" r="1.8" fill="currentColor" stroke="none"/>
-              <circle cx="29" cy="17" r="1.8" fill="currentColor" stroke="none"/>
-              <circle cx="24" cy="25" r="1.8" fill="currentColor" stroke="none"/>
-              <circle cx="17" cy="27" r="1.8" fill="currentColor" stroke="none"/>
-              <circle cx="31" cy="27" r="1.8" fill="currentColor" stroke="none"/>
-            </svg>
-            <h3>Electrodes sample a mixture</h3>
-            <p>Each electrode sees a blurred combination of many sources. More electrodes
-              give the decoder more views of the same mixture — but placement decides
-              which views it gets.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">3</span>
-            <svg class="step-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-              <rect x="8" y="12" width="32" height="24" rx="4"/>
-              <path d="M16 24h4l2.5-5 3.5 10 2.5-5H33" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M16 33h16" stroke-linecap="round" opacity=".5"/>
-            </svg>
-            <h3>A model learns the pattern</h3>
-            <p>The decoder is trained on labelled trials and scored on held-out ones.
-              The gap between the full cap and a wearable is the price of the channel
-              budget.</p>
-          </article>
-        </div>
-
-        <div class="count-placement reveal">
-          <article class="cp-card">
-            <div>
-              <span class="cp-tag">Channel count</span>
-              <h3>More channels, more information</h3>
-              <p>Going from four to eight electrodes usually helps. But returns flatten:
-                eight well-placed electrodes recover about 91% of the 22-channel motor-imagery
-                score, and four occipital electrodes recover 98.5% of the SSVEP score.</p>
-            </div>
-            <div class="mini-head" id="mini-count" aria-hidden="true"></div>
-          </article>
-          <article class="cp-card">
-            <div>
-              <span class="cp-tag">Channel placement</span>
-              <h3>Where they sit can matter more</h3>
-              <p>In the same motor task, the wrong region is worse than a random subset.
-                Eight in-ear electrodes sit at chance, while eight over motor cortex are
-                statistically indistinguishable from the 115-channel cap.</p>
-            </div>
-            <div class="mini-head" id="mini-placement" aria-hidden="true"></div>
-          </article>
-        </div>
+    <!-- --------------------------------------------------------------- answer -->
+    <section id="answer">
+      <div class="prose">
+        <h2><span class="num">2</span>The answer</h2>
+        <ol class="findings">
+          <li>
+            <strong>Electrode count is cheap.</strong> Eight of the nine tasks keep at
+            least 85% of their full-montage score with a reduced montage. The exception
+            is auditory attention at 78%,
+            where a lower signal-to-noise ratio is not free — it is only slow.
+          </li>
+          <li>
+            <strong>Placement is the larger effect.</strong> In one session, with
+            eight electrodes on each side and the same decoder, a sensorimotor patch
+            scores 0.739 AUC and the ear scores
+            0.464 — a loss of
+            0.275 (95% CI [−0.378, −0.173],
+            6/6 negative). That is larger than the entire cost of
+            dropping 107 of the 115 cap electrodes, a loss of
+            0.036 (95% CI [−0.144, 0.073]).
+          </li>
+          <li>
+            <strong>What a wearable costs depends on the signal.</strong> The same
+            ear site loses 0.275 AUC on motor execution,
+            0.056 κ on sleep staging, and
+            0.181 accuracy on auditory attention.
+            Broad, slow
+            activity reaches the ear; a focal fast rhythm does not; and a speech
+            envelope is the hardest case of all.
+          </li>
+          <li>
+            <strong>Where to put them depends on the task.</strong> At four
+            electrodes, a frontal set is the best choice for cognitive workload
+            (90th percentile of random draws) and a poor one for
+            emotion (65th), where a posterior set wins
+            (80th). There is no single "wearable montage".
+          </li>
+        </ol>
       </div>
     </section>
 
-    <!-- --------------------------------------------------------------- tasks -->
-    <section class="section" id="tasks">
-      <div class="container">
-        <div class="section-heading reveal">
-          <p class="eyebrow">01 · The tasks</p>
-          <h2>Six ways to read a brain</h2>
-          <p>
-            Each task is a different kind of signal, recorded from a different public dataset.
-            Click a card to see what the participant does, what the decoder sees, and what the
-            benchmark found. The small plots are drawn from real trials, not simulations.
-          </p>
-        </div>
+    <!-- ----------------------------------------------------------- placement -->
+    <figure>
+      <a href="assets/figures/fig3_placement.pdf" title="Open the vector PDF">
+        <img src="assets/figures/fig3_placement.png" width="1600" height="910"
+             alt="Top row: four top-down head maps of the same eight-channel budgets over sensorimotor, frontal and temporal scalp and in the ear. Bottom: a bar chart of their ROC-AUC against the full-cap reference and chance.">
+      </a>
+      <figcaption>
+        <span class="label">Figure 2.</span> Same eight electrodes, same session, same
+        decoder, four placements. <strong>(a)</strong> The 115-channel cap in grey with
+        each montage's eight electrodes coloured. <strong>(b)</strong> ROC-AUC for each
+        placement, plus a max-spread subset and the mean of random subsets. The dashed
+        line is the full cap, the dotted line is chance. Moving those eight electrodes
+        from motor cortex to the ear costs more than discarding the other 107.
+      </figcaption>
+    </figure>
 
-        <div class="task-grid reveal" id="task-grid"></div>
+    <!-- ------------------------------------------------------------ wearable -->
+    <figure>
+      <a href="assets/figures/fig4_wearable_gap.pdf" title="Open the vector PDF">
+        <img src="assets/figures/fig4_wearable_gap.png" width="1600" height="680"
+             alt="Two paired slopegraphs. Left: per-subject ROC-AUC for eight sensorimotor scalp electrodes versus eight in-ear electrodes. Right: per-night Cohen's kappa for six scalp electrodes, six ear electrodes and fourteen ear electrodes.">
+      </a>
+      <figcaption>
+        <span class="label">Figure 3.</span> The same wearable, two different verdicts.
+        Each thin line is one participant <strong>(a)</strong> or one night
+        <strong>(b)</strong>; the thick line is the group mean. Motor execution loses
+        0.275 AUC and sleep staging loses only
+        0.056 κ. The difference is the signal, not the
+        electrode: sleep is broad and slow and reaches the ear, a sensorimotor rhythm
+        does not.
+      </figcaption>
+    </figure>
 
-        <div class="task-detail reveal" id="task-detail">
-          <div class="task-tabs" id="task-tabs" role="tablist" aria-label="Task details"></div>
-          <div class="task-panel" id="task-panel"></div>
-        </div>
+    <!-- ------------------------------------------------------------- results -->
+    <section id="results">
+      <div class="prose">
+        <h2><span class="num">3</span>The nine tasks</h2>
+        <p>
+          One public dataset and one fixed classical decoder per task, over the full
+          published cohort. <em>Retained</em> is the best reduced montage as a
+          percentage of that task's reference; the interval is a paired <em>t</em>
+          interval over participants. Full per-montage tables, per-decoder
+          comparisons and every control are in the
+          <a href="https://github.com/Barryyjiang/FORGE-EEG/blob/main/results/REPORT.md">benchmark report</a>.
+        </p>
+      </div>
+
+    <div class="table-wrap">
+    <table>
+      <caption><span class='label'>Table 1.</span> Headline result per task: the best reduced montage against that task's reference, at the task's standard decoder. Deltas are paired on the same subject (or subject-session) with 95% paired <em>t</em> intervals recomputed from <code>results/benchmark/</code>.</caption>
+      <thead>
+        <tr><th>Task</th><th>Reference</th><th>Best reduced montage</th><th class="num">Retained</th><th class="num">Paired Δ [95% CI]</th><th>Agreement</th></tr>
+      </thead>
+      <tbody>
+      <tr><td><strong>Motor imagery</strong></td><td>0.871<br><span class='small'>Full cap, k=22</span></td><td>0.794<br><span class='small'>Sensorimotor region, k=8</span></td><td class="num"><strong>91.1%</strong></td><td class="num"><span class='delta-neg'>−0.077</span><br><span class='small nowrap'>[−0.120, −0.035]</span></td><td>18/18 negative<br><span class='small'>n=18, p=0.001</span></td></tr>
+      <tr><td><strong>Motor imagery, 4 classes</strong></td><td>0.722<br><span class='small'>Full cap, k=22</span></td><td>0.613<br><span class='small'>Sensorimotor region, k=8</span></td><td class="num"><strong>85.0%</strong></td><td class="num"><span class='delta-neg'>−0.108</span><br><span class='small nowrap'>[−0.144, −0.073]</span></td><td>18/18 negative<br><span class='small'>n=18, p=0.000</span></td></tr>
+      <tr><td><strong>P300 speller</strong></td><td>0.858<br><span class='small'>Full cap, k=8</span></td><td>0.812<br><span class='small'>Max-spread subset, k=4</span></td><td class="num"><strong>94.6%</strong></td><td class="num"><span class='delta-neg'>−0.046</span><br><span class='small nowrap'>[−0.067, −0.025]</span></td><td>8/8 negative<br><span class='small'>n=8, p=0.001</span></td></tr>
+      <tr><td><strong>SSVEP</strong></td><td>0.928<br><span class='small'>Full cap, k=8</span></td><td>0.914<br><span class='small'>Max-spread subset, k=4</span></td><td class="num"><strong>98.5%</strong></td><td class="num"><span class='delta-neg'>−0.014</span><br><span class='small nowrap'>[−0.052, 0.024]</span></td><td>5/10 negative<br><span class='small'>n=10, p=0.429</span></td></tr>
+      <tr><td><strong>Motor execution</strong></td><td>0.775<br><span class='small'>Full cap, k=115</span></td><td>0.739<br><span class='small'>Sensorimotor region, k=8</span></td><td class="num"><strong>95.4%</strong></td><td class="num"><span class='delta-neg'>−0.036</span><br><span class='small nowrap'>[−0.144, 0.073]</span></td><td>5/6 negative<br><span class='small'>n=6, p=0.438</span></td></tr>
+      <tr><td><strong>Sleep staging</strong></td><td>0.418<br><span class='small'>Scalp 6 ch, k=6</span></td><td>0.362<br><span class='small'>Ear 6 ch, k=6</span></td><td class="num"><strong>86.5%</strong></td><td class="num"><span class='delta-neg'>−0.056</span><br><span class='small nowrap'>[−0.104, −0.009]</span></td><td>9/9 negative<br><span class='small'>n=9, p=0.026</span></td></tr>
+      <tr><td><strong>Cognitive workload</strong></td><td>0.874<br><span class='small'>Full 14 ch, k=14</span></td><td>0.844<br><span class='small'>Glasses-like 4 ch, k=4</span></td><td class="num"><strong>96.6%</strong></td><td class="num"><span class='delta-neg'>−0.030</span><br><span class='small nowrap'>[−0.059, −0.001]</span></td><td>30/48 negative<br><span class='small'>n=48, p=0.041</span></td></tr>
+      <tr><td><strong>Auditory attention</strong></td><td>0.807<br><span class='small'>Scalp 12 ch, k=12</span></td><td>0.626<br><span class='small'>In-ear 12 ch, k=12</span></td><td class="num"><strong>77.5%</strong></td><td class="num"><span class='delta-neg'>−0.181</span><br><span class='small nowrap'>[−0.249, −0.114]</span></td><td>14/15 negative<br><span class='small'>n=15, p=0.000</span></td></tr>
+      <tr><td><strong>Emotion recognition</strong></td><td>0.570<br><span class='small'>Full 30 ch, k=30</span></td><td>0.558<br><span class='small'>Posterior 4 ch, k=4</span></td><td class="num"><strong>97.9%</strong></td><td class="num"><span class='delta-neg'>−0.012</span><br><span class='small nowrap'>[−0.030, 0.006]</span></td><td>55/123 negative<br><span class='small'>n=123, p=0.186</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+      <div class="prose">
+        <p class="small">
+          Read the retention against the margin. Keeping 98% of a score that sits
+          seven points above chance is not the same claim as keeping 98% of
+          0.928, which is why the report also gives the share
+          of the above-chance margin each reduction consumes.
+        </p>
       </div>
     </section>
 
-    <!-- ------------------------------------------------------------ explorer -->
-    <section class="section" id="explorer">
-      <div class="container">
-        <div class="section-heading reveal">
-          <p class="eyebrow">02 · The result</p>
-          <h2>What happens when you remove electrodes?</h2>
-          <p>
-            Every dot is a matched-size electrode set, evaluated with the same decoder on the
-            same trials. The dashed line is the full cap; the orange line is chance. Click a dot
-            to see the electrodes on a head. Compare sets with the same number of electrodes —
-            that is the only way to separate count from placement.
-          </p>
-        </div>
+    <!-- -------------------------------------------------------------- method -->
+    <section id="method">
+      <div class="prose">
+        <h2><span class="num">4</span>How we know</h2>
+        <p>
+          A montage comparison is only as good as the things held fixed. Four rules
+          do that work here, and each of them caught a real error during the project.
+        </p>
+        <ul>
+          <li><strong>Matched channel counts.</strong> Exactly <em>k</em> electrodes
+            on both sides of every comparison, so a difference is placement. Where a
+            dataset offers no ear recording, the reduced montage is a scalp proxy and
+            is labelled as one — never reported as a device.</li>
+          <li><strong>Paired by participant.</strong> Every delta pairs each person
+            with themselves, and every interval quoted here is a 95% paired
+            <em>t</em> interval.</li>
+          <li><strong>Permutation controls.</strong> Each task's headline decoder is
+            re-run on shuffled labels. Every null lands within 0.05 of its chance
+            level, checked per control row rather than on a file average, and the
+            report refuses to write if one does not.</li>
+          <li><strong>Confounds measured, not argued away.</strong> The two datasets
+            with a known problem ship a control that quantifies it, below.</li>
+        </ul>
+      </div>
 
-        <div class="explorer-shell reveal">
-          <div class="explorer-controls">
-            <div class="task-chips" id="task-chips" role="tablist" aria-label="Choose a task"></div>
-            <div class="control-row">
-              <div class="control-group">
-                <label for="protocol-select">Test protocol</label>
-                <select id="protocol-select"></select>
-              </div>
-              <div class="control-group">
-                <label for="pipeline-select">Decoder</label>
-                <select id="pipeline-select"></select>
-              </div>
-              <div class="control-group">
-                <span class="control-label">Show</span>
-                <div class="segmented" id="view-toggle" role="group" aria-label="Chart value">
-                  <button type="button" data-view="score" class="is-active">Score</button>
-                  <button type="button" data-view="delta">Δ vs full cap</button>
-                </div>
-              </div>
-              <div class="control-group" id="itr-control" hidden>
-                <span class="control-label">Metric</span>
-                <div class="segmented" id="metric-toggle" role="group" aria-label="SSVEP metric">
-                  <button type="button" data-metric="accuracy" class="is-active">Accuracy</button>
-                  <button type="button" data-metric="itr">Bits/min</button>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div class="table-wrap">
+    <table>
+      <caption><span class='label'>Table 2.</span> Confound and reproduction checks. The drift rows re-run the workload decoder on a label-free target — first half versus second half of the same recording — so a value above 0.50 means the recording itself moves over time. The reproduction rows compare this benchmark's 60-second attention accuracies with the two columns the original paper publishes; landing on the with-ASR column is the evidence that the released data is already artifact-cleaned.</caption>
+      <thead>
+        <tr><th>Check</th><th>Task</th><th class="num">Measured</th><th class="num">Comparator</th><th>Reading</th></tr>
+      </thead>
+      <tbody>
+      <tr><td>Session drift<br><span class='small'>label-free</span></td><td><strong>STEW, full 14 ch</strong></td><td class="num">0.613</td><td class="num">0.501 shuffled halves</td><td>recording drifts</td></tr>
+      <tr><td>Session drift<br><span class='small'>label-free</span></td><td><strong>STEW, glasses-like 4 ch</strong></td><td class="num">0.578</td><td class="num">0.503 shuffled halves</td><td>recording drifts</td></tr>
+      <tr><td>Session drift<br><span class='small'>label-free</span></td><td><strong>STEW, posterior 4 ch</strong></td><td class="num">0.575</td><td class="num">0.499 shuffled halves</td><td>recording drifts</td></tr>
+      <tr><td>Session drift<br><span class='small'>label-free</span></td><td><strong>STEW, forehead 2 ch</strong></td><td class="num">0.567</td><td class="num">0.497 shuffled halves</td><td>recording drifts</td></tr>
+      <tr><td>Reproduction<br><span class='small'>against the paper</span></td><td><strong>Ear-SAAD, scalp 29 ch</strong></td><td class="num">83.70%</td><td class="num">83.44% with ASR / 86.11% without</td><td>matches the full pipeline</td></tr>
+      <tr><td>Reproduction<br><span class='small'>against the paper</span></td><td><strong>Ear-SAAD, around-ear 19 ch</strong></td><td class="num">68.89%</td><td class="num">67.22% with ASR / 64.89% without</td><td>matches the full pipeline</td></tr>
+      <tr><td>Reproduction<br><span class='small'>against the paper</span></td><td><strong>Ear-SAAD, in-ear 12 ch</strong></td><td class="num">62.59%</td><td class="num">61.11% with ASR / 58.78% without</td><td>matches the full pipeline</td></tr>
+      </tbody>
+    </table>
+    </div>
+    </section>
 
-          <div class="explorer-main">
-            <div class="chart-card">
-              <div class="chart-head">
-                <div>
-                  <h3 id="chart-title">Motor imagery · same session</h3>
-                  <p id="chart-subtitle">Riemannian TSLR · ROC-AUC</p>
-                </div>
-                <div class="chart-note" id="chart-note"></div>
-              </div>
-              <div class="chart" id="montage-chart"></div>
-              <p class="scroll-hint">Scroll sideways for the full chart →</p>
-              <div class="chart-legend" id="chart-legend"></div>
-            </div>
-
-            <aside class="map-card">
-              <div class="map-title">
-                <h3>Where the electrodes sit</h3>
-                <span id="map-count"></span>
-              </div>
-              <div class="head-svg" id="montage-head"></div>
-              <div class="montage-detail" id="montage-detail"></div>
-            </aside>
-          </div>
-
-          <div class="explorer-bottom">
-            <div class="montage-list" id="montage-list" aria-label="Montage scores"></div>
-            <div class="callout" id="matched-callout"></div>
-          </div>
-        </div>
+    <!-- -------------------------------------------------------------- limits -->
+    <section id="limits">
+      <div class="prose">
+        <h2><span class="num">5</span>What this does not say</h2>
+        <ul>
+          <li><strong>It is not a product simulation.</strong> The benchmark measures
+            how much decodable signal is present at a site under a fixed classical
+            pipeline. It does not model a particular wearable's amplifier, reference
+            scheme, impedance or motion artefact. That is the natural next study, and
+            it should be validated against the simultaneous scalp-and-ear recordings
+            used here.</li>
+          <li><strong>The decoders are deliberately ordinary.</strong> No pretrained
+            weights, no fine-tuning, no per-montage search. The point is to compare
+            electrode layouts on equal terms, not to win a leaderboard — and the size
+            of the decoder effects suggests deep models would add a second axis worth
+            treating separately.</li>
+          <li><strong>Comfort is missing.</strong> Gel-free operation, setup time and
+            unobtrusiveness are the reasons wearables exist, and none of them appear
+            in these numbers.</li>
+        </ul>
       </div>
     </section>
 
-    <!-- ------------------------------------------------------------- findings -->
-    <section class="section" id="findings">
-      <div class="container">
-        <div class="section-heading reveal">
-          <p class="eyebrow">03 · What it means</p>
-          <h2>Three things the benchmark makes hard to ignore</h2>
-          <p>
-            The headline is not “wearables are bad” or “wearables are fine.” It is that the
-            cost depends on the task, the decoder, and — at small channel counts — very
-            strongly on placement.
-          </p>
-        </div>
-
-        <div class="findings-grid reveal">
-          <article class="finding-card">
-            <p class="big-number">4–8 <small>well-placed electrodes</small></p>
-            <h3>Placement beats count</h3>
-            <p>At four electrodes in motor imagery, the sensorimotor region beats a max-spread
-              subset by +0.036 AUC and random subsets by up to +0.096. Spreading electrodes to
-              maximise coverage is the wrong objective for a focal source.</p>
-            <div class="finding-mini" id="finding-placement"></div>
-          </article>
-
-          <article class="finding-card">
-            <p class="big-number">0.54 → 0.86 <small>P300, two decoders</small></p>
-            <h3>Decoder choice rivals montage</h3>
-            <p>A generic log-variance decoder sits near chance on P300; xDAWN reaches 0.86.
-              SSVEP sat at 0.13 with band-power and reaches 0.93 with CCA. The “best montage”
-              depends on using the field’s standard decoder.</p>
-            <div class="finding-mini" id="finding-decoder"></div>
-          </article>
-
-          <article class="finding-card">
-            <p class="big-number">−0.275 <small>AUC at matched 8 channels</small></p>
-            <h3>Wearables are task-dependent</h3>
-            <p>Same in-ear site, two tasks: motor execution collapses at matched eight channels,
-              while sleep loses only 0.046 κ at matched six. Broad, slow waves reach the ear;
-              focal sensorimotor rhythms do not.</p>
-            <div class="finding-mini" id="finding-tasks"></div>
-          </article>
-        </div>
-
-        <div class="cross-task reveal">
-          <div class="cross-task-head">
-            <div>
-              <h3>Accuracy returns quickly — then flattens</h3>
-              <p>Best non-random reduced montage, shown as a percentage of the full-cap score.
-                Four to eight well-placed electrodes recover most of the accuracy in every
-                task where a dense cap exists.</p>
-            </div>
-          </div>
-          <div class="chart" id="cross-task-chart"></div>
-          <p class="scroll-hint">Scroll sideways for the full chart →</p>
-          <div class="chart-legend" id="cross-task-legend"></div>
-        </div>
+    <!-- ---------------------------------------------------------------- cite -->
+    <section id="cite">
+      <div class="prose">
+        <h2><span class="num">6</span>Citation and data</h2>
+        <p>
+          If you use this benchmark, cite it and the eight original datasets. The
+          citation block is generated from the author list in
+          <code>scripts/build_paper.py</code>; update it there, not here.
+        </p>
       </div>
-    </section>
 
-    <!-- ----------------------------------------------------------- validation -->
-    <section class="section" id="validation">
-      <div class="container">
-        <div class="section-heading reveal">
-          <p class="eyebrow">04 · Why you can trust it</p>
-          <h2>What would make these numbers wrong?</h2>
-          <p>
-            A benchmark is only as useful as its failure modes. We run a negative control for
-            every live track, flag small samples and unmatched channel counts, and keep the
-            caveats next to the result rather than in a footnote.
-          </p>
-        </div>
-
-        <div class="validation-grid reveal">
-          <article class="control-card">
-            <h3>Shuffled labels should land at chance</h3>
-            <p>Each decoder is re-run on permuted labels. If it can still learn, the real
-              result is contaminated — or the control is broken. The controls below are all
-              within tolerance of chance.</p>
-            <div class="chart" id="control-chart"></div>
-            <p class="scroll-hint">Scroll sideways for the full chart →</p>
-            <div class="chart-legend" id="control-legend"></div>
-          </article>
-
-          <article class="caveat-card">
-            <h3>Limits we do not hide</h3>
-            <p>These are the reasons a number here may not transfer to a real product.</p>
-            <ul class="caveat-list">
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.2v.1"/></svg>
-                <span><strong>Tier 1, not a wearable simulator.</strong> Deleting channels
-                from a dense cap ignores the reference, volume conduction, motion artifact and
-                the wearable’s noise floor.</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.2v.1"/></svg>
-                <span><strong>Proxy montages are geometry only.</strong> “cEEGrid proxy” and
-                “earbud proxy” are nearest 10-5 rings, not measurements of those products.</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.2v.1"/></svg>
-                <span><strong>Small samples.</strong> Motor execution has 6 subjects, sleep 5
-                nights, c-VEP 1 subject. At n=6, p=0.031 means “all six subjects agree in sign,”
-                not “highly significant.”</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.2v.1"/></svg>
-                <span><strong>The ear result contradicts a published paper.</strong> Wu et al.
-                report above-chance in-ear motor decoding with methods designed for it. Our
-                generic motor-cortex pipeline is not that method, so “ear is at chance” is
-                partly a decoder limitation.</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.2v.1"/></svg>
-                <span><strong>Model capacity is not held constant.</strong> A 4-channel product
-                would not ship a 64-channel model. Part of the low-channel drop is fewer
-                electrodes; part is less overfitting.</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.2v.1"/></svg>
-                <span><strong>c-VEP uses the wrong decoder.</strong> 0.400 is a lower bound.
-                Template matching or CCA against the known codes is the standard method.</span>
-              </li>
-            </ul>
-            <details class="quality-details">
-              <summary>Signal-quality checks (raw data)</summary>
-              <div id="quality-table"></div>
-            </details>
-          </article>
-        </div>
+      <div class="prose cite-block">
+        <button class="copy-button" type="button" data-copy-target="#bibtex">Copy</button>
+        <pre id="bibtex"><code>@misc{forge-eeg-benchmark,
+  title        = {The Electrode Budget: A Wearable Centric EEG Benchmark},
+  author       = {Barry Jiang and Mishti Broor and Sammy Mustafa and Fyzeen Ahmad and Chau Trần},
+  year         = {2026},
+  howpublished = {\url{https://github.com/Barryyjiang/FORGE-EEG}},
+  note         = {Benchmark code, results and interactive explorer. Northwestern University, Evanston, IL, USA}
+}</code></pre>
       </div>
-    </section>
 
-    <!-- -------------------------------------------------------------- methods -->
-    <section class="section" id="methods">
-      <div class="container">
-        <div class="section-heading reveal">
-          <p class="eyebrow">05 · Methods &amp; reproduction</p>
-          <h2>One data change, one decoder, one report</h2>
-          <p>
-            The benchmark is a declarative cross-product of dataset, paradigm, protocol,
-            montage and decoder. A track is one (dataset, paradigm, protocol) entry; a decoder
-            is one registry entry. The runner and leaderboard pick both up automatically.
-          </p>
-        </div>
-
-        <div class="methods-grid reveal">
-          <article class="method-card">
-            <h3>How a track is evaluated</h3>
-            <div class="pipeline">
-              <div class="pipeline-step"><span>1 · data</span><strong>Public dataset</strong></div>
-              <div class="pipeline-step"><span>2 · montage</span><strong>Equal-N subsets</strong></div>
-              <div class="pipeline-step"><span>3 · decoder</span><strong>Fold-wise fit</strong></div>
-              <div class="pipeline-step"><span>4 · report</span><strong>Δ vs full cap</strong></div>
-            </div>
-            <ul style="margin-top: 16px">
-              <li><strong>Equal-N:</strong> every geometric condition has exactly <em>k</em>
-                channels; random seeds are the chance control.</li>
-              <li><strong>Nested spread:</strong> farthest-point order gives a prefix of length
-                <em>k</em> for a monotone accuracy-vs-k curve.</li>
-              <li><strong>Paired deltas:</strong> comparisons pair on subject-session, so
-                between-subject variance cancels.</li>
-              <li><strong>Chance is per row:</strong> ROC-AUC 0.5, accuracy 1/n, Cohen’s κ 0.</li>
-              <li><strong>Resumable:</strong> one CSV per track × protocol; re-running skips
-                completed files.</li>
-            </ul>
-          </article>
-
-          <article class="method-card">
-            <h3>Reproduce the page and the numbers</h3>
-            <p>The site reads <code>results/benchmark/*.csv</code> and writes a single JSON
-              bundle. No result is typed into the HTML by hand.</p>
-            <pre class="code-block"><span class="c"># rebuild the benchmark tables</span>
-.\.venv\Scripts\python.exe scripts\report.py
-
-<span class="c"># rebuild the site data (numbers)</span>
-.\.venv\Scripts\python.exe scripts\build_site.py
-
-<span class="c"># optional: real EEG illustrations</span>
-.\.venv\Scripts\python.exe scripts\build_site_signals.py
-
-<span class="c"># preview locally</span>
-python -m http.server 8000 --directory docs</pre>
-            <div class="links-row">
-              <a class="link-chip" href="data/benchmark.json" download>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-                benchmark.json
-              </a>
-              <a class="link-chip" href="data/signals.json" download>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-                signals.json
-              </a>
-            </div>
-          </article>
-        </div>
-
-        <div class="methods-grid reveal" style="margin-top: 18px">
-          <article class="method-card">
-            <h3>Data sources</h3>
-            <p>Six task families, six public datasets. Recordings are downloaded and cached
-              under <code>data/</code>; the benchmark itself only stores derived CSVs.</p>
-            <div class="dataset-list">
-              <div class="dataset-item"><strong>BNCI 2014-001</strong><span>9 people · 22-ch motor imagery</span></div>
-              <div class="dataset-item"><strong>BNCI 2014-008</strong><span>8 people · 8-ch P300 speller</span></div>
-              <div class="dataset-item"><strong>Nakanishi 2015</strong><span>10 people · 8-ch SSVEP</span></div>
-              <div class="dataset-item"><strong>Wu 2020</strong><span>6 people · 122 scalp + 8 in-ear</span></div>
-              <div class="dataset-item"><strong>OpenNeuro ds004348</strong><span>5 nights · 6 scalp + 14 ear</span></div>
-              <div class="dataset-item"><strong>Castillos c-VEP 40</strong><span>1 person · 28-ch c-VEP</span></div>
-            </div>
-          </article>
-
-          <article class="method-card">
-            <h3>What this is not</h3>
-            <ul>
-              <li>A wearable product evaluation. Deleting channels from a dense cap is not a
-                forward model of a wearable.</li>
-              <li>A claim that ear-EEG is uninformative. It is a claim about this pipeline,
-                this task and this montage.</li>
-              <li>A leaderboard of deep models. EEGNet failed its own scalp control and is
-                excluded until it is stable.</li>
-              <li>A substitute for the published papers. Every dataset has a canonical
-                analysis; this benchmark asks a different, narrower question.</li>
-            </ul>
-            <p style="margin-top: 14px">
-              <strong>Full tables and caveats:</strong> see <code>results/REPORT.md</code>,
-              <code>README.md</code> and <code>GOALS.md</code> in the repository.
-            </p>
-          </article>
-        </div>
+      <div class="prose">
+        <p>
+          9 tasks over 8 public datasets,
+          217 evaluated montage × decoder cells, 58,294 trials
+          or windows. Every number on this page is written by the build from
+          <code>results/benchmark/</code>; nothing is transcribed by hand. The
+          <a href="explore/">interactive explorer</a> has every montage, every
+          decoder and every random subset, and
+          <a href="https://github.com/Barryyjiang/FORGE-EEG">the repository</a> has the code that produced them.
+        </p>
+        <p class="small">
+          Datasets: BNCI 2014-001 (motor imagery, two and four classes) and 2014-008
+          (P300), Nakanishi 2015 (SSVEP), Wu 2020 (simultaneous scalp and in-ear
+          motor execution), OpenNeuro ds004348 (scalp and ear sleep), STEW (cognitive
+          workload), Ear-SAAD (simultaneous scalp, around-ear and in-ear auditory
+          attention), and FACED (emotion recognition). All are public and permissively
+          licensed; see the repository for versions.
+        </p>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
+  <footer>
     <div class="container footer-inner">
       <p>
-        <strong>The Electrode Budget</strong> · generated from <code>results/benchmark/</code>
-        on <span id="generated-date">—</span>. Every number is regenerable with
-        <code>scripts/build_site.py</code>; every illustration is generated from public data
-        with <code>scripts/build_site_signals.py</code>.
+        <strong>The Electrode Budget</strong> · page generated from
+        <code>results/benchmark/</code> on 2026-11-16.
       </p>
-      <div class="footer-links">
-        <a href="#top">Top</a>
-        <a href="data/benchmark.json">Data</a>
-        <a href="#methods">Methods</a>
-      </div>
+      <p>
+        <a href="#top">Top</a> ·
+        <a href="explore/">Explorer</a> ·
+        <a href="data/benchmark.json">Data</a> ·
+        <a href="https://github.com/Barryyjiang/FORGE-EEG">Code</a>
+      </p>
     </div>
   </footer>
 
-  <script src="assets/app.js" defer></script>
+  <script src="assets/paper.js" defer></script>
 </body>
 </html>

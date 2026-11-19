@@ -1,2 +1,10 @@
-track,pipeline,subject,metric,n_classes,real,perm_mean,perm_sd,gap
-mi_leftright_22ch,riemann_tslr,1,roc_auc,2,0.9571683370137591,0.5090270935960591,0.0641774086289842,0.4481412434177
+track,subset,pipeline,subject,metric,n_classes,chance,real,perm_mean,perm_sd,gap,n_permutations,channels
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,1,roc_auc,2,0.5,0.939833531510107,0.49924103957873284,0.04304981110431722,0.4405924919313741,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,2,roc_auc,2,0.5,0.5651775097672838,0.49816655342279603,0.045768436927586004,0.06701095634448773,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,3,roc_auc,2,0.5,0.9801087141158484,0.49697282147103805,0.04634797398177764,0.4831358926448104,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,4,roc_auc,2,0.5,0.8258450823849159,0.5015737217598097,0.046052238050609956,0.3242713606251062,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,5,roc_auc,2,0.5,0.5842704263631731,0.5037708510276881,0.05102654939330655,0.08049957533548491,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,6,roc_auc,2,0.5,0.7317903855953797,0.4963883981654492,0.049367326693602775,0.23540198742993046,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,7,roc_auc,2,0.5,0.6804824188890777,0.5019295906234075,0.04704783320528247,0.1785528282656702,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,8,roc_auc,2,0.5,0.9894173602853746,0.5050431459147273,0.04392037560657888,0.4843742143706473,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"
+mi_leftright_22ch,region-sensorimotor_k8,riemann_tslr,9,roc_auc,2,0.5,0.9118566332597247,0.5058941736028537,0.04868315478077919,0.40596245965687094,100,"Cz,C6,C5,CP4,CP3,FC4,FC3,C2"

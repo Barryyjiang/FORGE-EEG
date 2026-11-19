@@ -17,6 +17,15 @@ import pandas as pd
 
 REQUIRED = ("score", "pipeline", "subset", "strategy", "k")
 
+#: The decision window each multi-window task is scored at in the leaderboard.
+#: A task that reports an accuracy-versus-window curve has one row per subject
+#: per window; averaging those into a single cell would produce a number that
+#: belongs to no window at all. The curve is kept in the CSV and summarised
+#: separately (see ``window_curve``).
+HEADLINE_WINDOW_S = {
+    "auditory_attention_earsaad": 60.0,
+}
+
 
 def load_results(directory: str | Path) -> pd.DataFrame:
     """Concatenate every ``*.csv`` result file in a directory."""
@@ -41,7 +50,42 @@ def load_results(directory: str | Path) -> pd.DataFrame:
             df["protocol"] = protocol_from_name or "unknown"
         df["source_file"] = path.name
         frames.append(df)
-    return pd.concat(frames, ignore_index=True)
+    raw = pd.concat(frames, ignore_index=True)
+
+    for track, seconds in HEADLINE_WINDOW_S.items():
+        if "trial_seconds" in raw.columns:
+            drop = (raw["track"] == track) & (raw["trial_seconds"] != seconds)
+            raw = raw[~drop]
+    return raw
+
+
+def window_curve(directory: str | Path) -> pd.DataFrame:
+    """Mean score per (track, subset, decision window), for multi-window tasks.
+
+    Kept out of the leaderboard because it is a curve, not a cell. Returns an
+    empty frame when no task reports more than one window.
+    """
+    directory = Path(directory)
+    frames = []
+    for path in sorted(directory.glob("*.csv")):
+        if path.stem.endswith("_summary"):
+            continue
+        df = pd.read_csv(path)
+        if "trial_seconds" not in df.columns:
+            continue
+        if df["trial_seconds"].nunique() < 2:
+            continue
+        track = path.stem.partition("__")[0]
+        frames.append(df.assign(track=track))
+    if not frames:
+        return pd.DataFrame()
+    df = pd.concat(frames, ignore_index=True)
+    out = (df.groupby(["track", "subset", "trial_seconds"])["score"]
+           .agg(["mean", "std", "count"]).reset_index()
+           .rename(columns={"mean": "score_mean", "std": "score_sd",
+                            "count": "n"}))
+    out["score_sem"] = out["score_sd"] / out["n"].pow(0.5)
+    return out
 
 
 def add_chance(df: pd.DataFrame) -> pd.DataFrame:
@@ -56,7 +100,7 @@ def add_chance(df: pd.DataFrame) -> pd.DataFrame:
     n = df["n_classes"].astype(float) if "n_classes" in df.columns else pd.Series(
         2.0, index=df.index
     )
-    known = {"roc_auc", "accuracy", "kappa", "pearson"}
+    known = {"roc_auc", "accuracy", "balanced_accuracy", "kappa", "pearson"}
 
     def _metric(m, c) -> str:
         # Files written before the metric column existed (MI, P300, motor
@@ -110,7 +154,23 @@ def summarise(df: pd.DataFrame) -> pd.DataFrame:
         .rename(columns={"score_mean": "full_score"})
     )
     agg = agg.merge(full, on=["track", "protocol", "pipeline"], how="left")
-    agg["delta_vs_full"] = agg["score_mean"] - agg["full_score"]
+
+    # A dataset with no dense cap (sleep) has no "full" row. Use its matched
+    # scalp montage as the reference instead of leaving every delta blank.
+    missing = agg["full_score"].isna()
+    if missing.any():
+        fallback = (
+            agg[missing & (agg["strategy"] == "region")]
+            .sort_values("k")
+            .groupby(["track", "protocol", "pipeline"], as_index=False)
+            .first()[["track", "protocol", "pipeline", "score_mean"]]
+            .rename(columns={"score_mean": "fallback_score"})
+        )
+        agg = agg.merge(fallback, on=["track", "protocol", "pipeline"], how="left")
+        agg["full_score"] = agg["full_score"].fillna(agg["fallback_score"])
+        agg = agg.drop(columns=["fallback_score"])
+
+    agg["delta_vs_reference"] = agg["score_mean"] - agg["full_score"]
     agg["above_chance"] = agg["score_mean"] - agg["chance"]
 
     agg = _add_itr(agg)
@@ -119,6 +179,13 @@ def summarise(df: pd.DataFrame) -> pd.DataFrame:
         ["track", "protocol", "pipeline", "k", "score_mean"],
         ascending=[True, True, True, True, False],
     )
+
+
+#: Tracks where the Wolpaw ITR formula does not apply. Auditory attention is a
+#: continuous two-class decision, not an independent selection: consecutive
+#: windows cover overlapping speech and the formula's independence assumption
+#: fails, so a bits-per-minute figure would be meaningless next to SSVEP's.
+NO_ITR_TRACKS = {"auditory_attention_earsaad"}
 
 
 def _add_itr(agg: pd.DataFrame) -> pd.DataFrame:
@@ -141,6 +208,7 @@ def _add_itr(agg: pd.DataFrame) -> pd.DataFrame:
         if (
             pd.isna(n_classes)
             or pd.isna(trial)
+            or str(row.get("track")) in NO_ITR_TRACKS
             or not is_itr_eligible(str(row["metric"]), int(n_classes), float(trial))
         ):
             values.append(float("nan"))
@@ -160,7 +228,7 @@ def leaderboard(directory: str | Path) -> pd.DataFrame:
 def render(table: pd.DataFrame, *, width: int = 200) -> str:
     cols = [
         "track", "protocol", "pipeline", "subset", "k",
-        "score_mean", "score_sem", "chance", "delta_vs_full", "itr_bpm",
+        "score_mean", "score_sem", "chance", "delta_vs_reference", "itr_bpm",
     ]
     cols = [c for c in cols if c in table.columns]
     with pd.option_context("display.width", width, "display.max_rows", 500):

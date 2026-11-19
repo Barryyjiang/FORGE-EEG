@@ -156,16 +156,16 @@ TASKS = [
         "id": "motor_execution_ear_vs_scalp",
         "order": 4,
         "name": "Clench a fist",
-        "short": "Ear vs scalp",
+        "short": "Motor execution",
         "kicker": "Motor execution",
         "paradigm": "Motor execution",
         "dataset": "wu2020",
         "datasetName": "Wu 2020",
         "subjects": "6 people",
         "nLabel": "6 subjects",
-        "channels": "122 scalp + 8 in-ear",
+        "channels": "115 of 122 scalp + 8 in-ear",
         "sfreq": "1000 Hz",
-        "examples": 1182,
+        "examples": 1114,
         "metric": "roc_auc",
         "metricLabel": "ROC-AUC",
         "chance": 0.5,
@@ -174,7 +174,7 @@ TASKS = [
         "pipelines": ["riemann_tslr", "csp_lda", "logvar_lda"],
         "protocols": ["within_session"],
         "person": "On cue, the participant clenches the left or right fist. "
-                  "EEG is recorded at the same time from a 122-channel cap and "
+                  "EEG is recorded at the same time from a dense scalp cap and "
                   "eight in-ear electrodes.",
         "computer": "The decoder tries to tell left from right. On the scalp, "
                     "motor cortex carries the signal; in the ear, the same "
@@ -186,10 +186,12 @@ TASKS = [
                     "in-ear scores 0.464.",
         "signalKey": "motor_auc",
         "signalTitle": "One electrode, left vs right fist",
-        "signalCaption": "Single-channel beta-band AUC. The best scalp "
-                         "electrode is above chance; no single ear electrode "
-                         "is. That is consistent with the montage result — not "
-                         "proof that ear-EEG carries no motor information.",
+        "signalCaption": "Single-channel beta-band AUC, averaged over "
+                         "subjects. On this averaged view the best scalp "
+                         "electrode is above chance and the best ear electrode "
+                         "is not; individual ear channels do cross chance in "
+                         "some subjects, so the montage-level comparison at "
+                         "matched channel count is the reported result.",
         "illustration": "motor",
         "accent": "coral",
     },
@@ -202,11 +204,11 @@ TASKS = [
         "paradigm": "Sleep staging",
         "dataset": "openneuro_ds004348",
         "datasetName": "OpenNeuro ds004348",
-        "subjects": "5 nights",
-        "nLabel": "5 nights",
+        "subjects": "9 nights",
+        "nLabel": "9 nights",
         "channels": "6 scalp + 14 ear",
         "sfreq": "200 Hz",
-        "examples": 4630,
+        "examples": 7410,
         "metric": "kappa",
         "metricLabel": "Cohen’s κ",
         "chance": 0.0,
@@ -223,7 +225,7 @@ TASKS = [
         "why": "Sleep is the wearable-native continuous task. Unlike a focal "
                "motor rhythm, slow sleep waves are broad, so the ear has a "
                "better chance.",
-        "headline": "The ear is close, not equal: −0.046 κ at matched six "
+        "headline": "The ear is close, not equal: −0.056 κ at matched six "
                     "channels.",
         "signalKey": "sleep",
         "signalTitle": "One night, scored every 30 seconds",
@@ -236,46 +238,195 @@ TASKS = [
         "referenceLabel": "Scalp 6 ch",
     },
     {
-        "id": "cvep_local",
+        "id": "stew_workload_14ch",
         "order": 6,
-        "name": "Read a code",
-        "short": "c-VEP",
-        "kicker": "Exploratory",
-        "paradigm": "Code-modulated VEP",
-        "dataset": "castillos_cvep40",
-        "datasetName": "Castillos c-VEP 40",
-        "subjects": "1 person",
-        "nLabel": "1 subject",
-        "channels": "28 EEG",
-        "sfreq": "500 Hz",
-        "examples": 60,
+        "name": "Sit still, then multitask",
+        "short": "Cognitive workload",
+        "kicker": "Cognitive workload",
+        "paradigm": "Cognitive workload",
+        "dataset": "stew",
+        "datasetName": "STEW (Lim 2018)",
+        "subjects": "48 people",
+        "nLabel": "48 subjects",
+        "channels": "14 (Emotiv EPOC)",
+        "sfreq": "128 Hz",
+        "examples": 3552,
+        "metric": "roc_auc",
+        "metricLabel": "ROC-AUC",
+        "chance": 0.5,
+        "defaultPipeline": "psd_lda",
+        # The honest protocol is the one where the decoder never sees the test
+        # person. The within-person calibration number is kept as a second
+        # protocol because it is what the STEW literature reports.
+        "defaultProtocol": "cross_subject",
+        "pipelines": ["psd_lda"],
+        "protocols": ["within_session", "cross_subject"],
+        "referenceLabel": "Full 14 ch",
+        "person": "The participant sits quietly for two and a half minutes, "
+                  "then works through the SIMKAP multitasking test for two and "
+                  "a half minutes, wearing a 14-channel Emotiv EPOC.",
+        "computer": "Band power in four bands per 4-second window, classified "
+                    "by shrinkage LDA. The decoder has to tell a resting "
+                    "recording from a multitasking one.",
+        "why": "The largest cohort here (48 people) and the only headset rather "
+               "than cap, so it is the one place where a frontal "
+               "\u201cglasses-like\u201d four-electrode subset can be measured "
+               "against a full montage. Its four-electrode sets are scalp "
+               "proxies, labelled as such, not measured glasses hardware.",
+        "headline": "Four frontal electrodes keep 97% of the 14-channel score.",
+        "signalKey": "stew",
+        "signalTitle": "Rest vs multitasking, one electrode",
+        "signalCaption": "AF3 from subject 01: the resting recording, then the "
+                         "first ten seconds of the SIMKAP task. The task "
+                         "recording carries more high-frequency muscle activity "
+                         "and a weaker alpha rhythm \u2014 part of what the "
+                         "decoder is reading.",
+        "illustration": "stew",
+        "accent": "accent2",
+    },
+    {
+        "id": "auditory_attention_earsaad",
+        "order": 7,
+        "name": "Follow one voice",
+        "short": "Auditory attention",
+        "kicker": "Auditory attention",
+        "paradigm": "Auditory attention decoding",
+        "dataset": "earsaad",
+        "datasetName": "Ear-SAAD (Geirnaert 2025)",
+        "subjects": "15 people",
+        "nLabel": "15 subjects",
+        "channels": "29 scalp + 19 around-ear + 12 in-ear",
+        "sfreq": "20 Hz",
+        "examples": 90,
+        "metric": "accuracy",
+        "metricLabel": "Accuracy",
+        "chance": 0.5,
+        "defaultPipeline": "ridge_reconstruction",
+        "defaultProtocol": "within_session",
+        "pipelines": ["ridge_reconstruction"],
+        "protocols": ["within_session"],
+        # Matched-k is the benchmark rule, so the headline compares the 12 in-ear
+        # electrodes against the 12 most spread scalp electrodes. The as-built
+        # 29/19/12 comparison is reported too, because that is the paper's.
+        "referenceSubset": "scalp_12_k12",
+        "headlineSubset": "in_ear_12_k12",
+        "referenceLabel": "Scalp 12 ch",
+        # The decision window every headline number for this task is taken at.
+        "headlineWindowS": 60.0,
+        "person": "Two talkers speak at once. The participant attends to one of "
+                  "them while scalp, around-ear and in-ear EEG are recorded at "
+                  "the same time.",
+        "computer": "A ridge decoder reconstructs the attended speech envelope "
+                    "from EEG, and the talker whose envelope correlates more "
+                    "with the reconstruction wins. Decisions are made on 60 s "
+                    "windows, the paper's headline length.",
+        "why": "The only public dataset that records all three systems "
+               "simultaneously, so it is a direct test of the ear site for this "
+               "paradigm rather than a geometric proxy. It is also the task "
+               "where the ear costs the most.",
+        "headline": "At twelve electrodes each, the in-ear set keeps 78% of the "
+                    "matched scalp score.",
+        "signalKey": "earsaad",
+        "signalTitle": "Envelope tracking, scalp vs in-ear",
+        "signalCaption": "Correlation between the reconstructed and the true "
+                         "attended envelope, per subject, for the scalp cap and "
+                         "the in-ear set. The scalp decoder tracks the speech "
+                         "envelope; the in-ear decoder tracks it less.",
+        "illustration": "earsaad",
+        "accent": "slate",
+    },
+    {
+        "id": "mi_4class_22ch",
+        "order": 8,
+        "name": "Imagine a hand, a foot or a tongue",
+        "short": "Motor imagery, 4 classes",
+        "kicker": "Motor imagery",
+        "paradigm": "Motor imagery (4-class)",
+        "dataset": "BNCI2014_001",
+        "datasetName": "BNCI 2014-001",
+        "subjects": "9 people \u00d7 2 sessions",
+        "nLabel": "18 subject-sessions",
+        "channels": "22 EEG",
+        "sfreq": "250 Hz",
+        # 288 trials per session x 18 sessions: the four-class task uses all of
+        # them, where the two-class task keeps only the left/right halves.
+        "examples": 5184,
         "metric": "accuracy",
         "metricLabel": "Accuracy",
         "chance": 0.25,
         "nClasses": 4,
-        "trialSeconds": 2.0,
+        "trialSeconds": 4.0,
         "defaultPipeline": "riemann_tslr",
         "defaultProtocol": "within_session",
-        "pipelines": ["riemann_tslr"],
+        "pipelines": ["riemann_tslr", "csp_lda", "logvar_lda"],
         "protocols": ["within_session"],
-        "person": "Targets flash with a pseudorandom binary code instead of a "
-                  "fixed frequency.",
-        "computer": "The response follows the code. The correct decoder "
-                    "matches the EEG against each known code sequence; this "
-                    "track currently uses a generic covariance decoder, so its "
-                    "score is a lower bound.",
-        "why": "c-VEP is fast and has strong published results, but it needs "
-               "template matching. We keep it visible with a caveat instead of "
-               "hiding the failure.",
-        "headline": "0.400 vs 0.250 chance — above chance, but decoder-limited.",
-        "signalKey": "cvep",
-        "signalTitle": "Code-modulated flicker",
-        "signalCaption": "One two-second c-VEP trial. The step line is the "
-                         "stimulus code; the traces are occipital EEG. A proper "
-                         "decoder correlates the response with each code.",
-        "illustration": "cvep",
-        "accent": "slate",
-        "status": "exploratory",
+        "person": "The same nine people and the same cap as the two-class task, "
+                  "but four cues: left hand, right hand, both feet, tongue.",
+        "computer": "Same decoder, same montages, four classes instead of two. "
+                    "Feet and tongue are represented near the midline, so a "
+                    "lateralised sensorimotor patch has less to work with.",
+        "why": "Class count is an axis the rest of the benchmark holds fixed. "
+               "If the cost of a small montage grows when you ask it to "
+               "distinguish more things, then 'eight electrodes are enough' is "
+               "only true for the two-class version of a task.",
+        "headline": "The same eight sensorimotor electrodes keep 91% of a "
+                    "two-class score but only 85% of a four-class one.",
+        "signalKey": "mi",
+        "signalTitle": "One imagined left-hand trial",
+        "signalCaption": "C3 and C4 sit over the left and right motor cortex. The "
+                         "~10 Hz wiggle is the mu rhythm the decoder uses; it "
+                         "drops over the hand being imagined. The four-class task "
+                         "adds feet and tongue, which are not lateralised.",
+        "illustration": "mi",
+        "accent": "accent",
+    },
+    {
+        "id": "faced_emotion_123",
+        "order": 9,
+        "name": "Watch a video, read the mood",
+        "short": "Emotion recognition",
+        "kicker": "Affect",
+        "paradigm": "Emotion recognition",
+        "dataset": "faced",
+        "datasetName": "FACED (Chen 2022)",
+        "subjects": "123 people",
+        "nLabel": "123 subjects",
+        "channels": "30 EEG",
+        "sfreq": "250 Hz",
+        "examples": 2952,
+        "metric": "balanced_accuracy",
+        "metricLabel": "Balanced accuracy",
+        "chance": 0.5,
+        "defaultPipeline": "psd_lda",
+        "defaultProtocol": "within_session",
+        "pipelines": ["psd_lda"],
+        "protocols": ["within_session"],
+        # The headline is the best four-electrode placement, not the best of the
+        # whole nested path: 24 channels score above 30 by noise, and quoting
+        # that as "retained 100%" would be misleading.
+        "referenceSubset": "full_k30",
+        "headlineSubset": "posterior_4_k4",
+        "referenceLabel": "Full 30 ch",
+        "person": "The participant watches short videos chosen to elicit a "
+                  "particular emotion, while 30 scalp electrodes record.",
+        "computer": "Band power in four bands per 4-second window, classified "
+                    "as positive or negative valence. A video gets one "
+                    "prediction, averaged over its windows.",
+        "why": "The largest cohort here by a wide margin (123 people) and the "
+               "only affect task. It is also the one where the wearable "
+               "question is asked of a frontal site, and where the answer is "
+               "uncomfortably small: the effect is only about six points above "
+               "chance to begin with.",
+        "headline": "Four posterior electrodes keep 98% of a 30-channel score "
+                    "that is itself only six points above chance.",
+        "signalKey": "faced",
+        "signalTitle": "One video, positive vs negative",
+        "signalCaption": "Band power at four electrodes, averaged over "
+                         "participants, for the two valence classes. The "
+                         "separation is small and it is not where a glasses "
+                         "frame would put its electrodes.",
+        "illustration": "faced",
+        "accent": "violet",
     },
 ]
 
@@ -286,6 +437,33 @@ PIPELINE_LABELS = {
     "xdawn_tslr": "xDAWN + Riemannian",
     "ssvep_cca": "CCA (SSVEP)",
     "bandpower_lda": "Band-power + LDA",
+    "psd_lda": "PSD + LDA",
+    "ridge_reconstruction": "Ridge reconstruction",
+}
+
+#: Per-track montage names. The generic rules below cannot name these: a
+#: four-electrode subset of an Emotiv is not a "full cap", and "in_ear_12_k12"
+#: title-cases into nonsense.
+SUBSET_LABELS = {
+    "stew_workload_14ch": {
+        "full_14_k14": "Full 14 ch",
+        "glasses_4_k4": "Glasses-like 4 ch",
+        "posterior_4_k4": "Posterior 4 ch",
+        "forehead_2_k2": "Forehead 2 ch",
+    },
+    "auditory_attention_earsaad": {
+        "scalp_29_k29": "Scalp 29 ch",
+        "scalp_19_k19": "Scalp 19 ch (spread)",
+        "scalp_12_k12": "Scalp 12 ch (spread)",
+        "around_ear_19_k19": "Around-ear 19 ch",
+        "in_ear_12_k12": "In-ear 12 ch",
+    },
+    "faced_emotion_123": {
+        "full_k30": "Full 30 ch",
+        "glasses_4_k4": "Glasses-like 4 ch",
+        "temporal_4_k4": "Temporal 4 ch",
+        "posterior_4_k4": "Posterior 4 ch",
+    },
 }
 
 PROTOCOL_LABELS = {
@@ -303,31 +481,16 @@ REGION_LABELS = {
 }
 
 WEARABLE_LABELS = {
-    "muse2": "Muse 2",
-    "ceegrid_proxy": "cEEGrid (proxy)",
-    "earbud_proxy": "Earbud (proxy)",
-    "headband_proxy": "Headband (proxy)",
-    "thielen2021": "Thielen 2021",
     "wu2020_inear": "In-ear (Wu 2020)",
 }
 
-# Schematic ear positions, normalised to the head circle. These electrodes are
-# not part of the 10-5 nomenclature, so the map says "schematic" rather than
-# pretending they are measured scalp positions.
-EAR_POSITIONS = {
-    # Wu2020: four per ear (front, back, outer-upper, outer-down)
-    "LF": (-0.98, 0.16), "LB": (-0.98, -0.10),
-    "LOU": (-1.06, 0.07), "LOD": (-1.06, -0.02),
-    "RF": (0.98, 0.16), "RB": (0.98, -0.10),
-    "ROU": (1.06, 0.07), "ROD": (1.06, -0.02),
-    # ds004348: seven per ear, arranged around the ear
-    "ELA": (-0.94, 0.20), "ELE": (-1.02, 0.15), "ELI": (-1.07, 0.06),
-    "ELB1": (-1.07, -0.03), "ELB": (-1.03, -0.12), "ELG": (-0.96, -0.19),
-    "ELK": (-0.88, -0.24),
-    "ERA": (0.94, 0.20), "ERE": (1.02, 0.15), "ERI": (1.07, 0.06),
-    "ERB1": (1.07, -0.03), "ERB": (1.03, -0.12), "ERG": (0.96, -0.19),
-    "ERK": (0.88, -0.24),
-}
+#: The decision window the site quotes for tasks that are scored at several.
+#: Imported so the site, the leaderboard and the report cannot disagree.
+from eegbench.leaderboard import HEADLINE_WINDOW_S  # noqa: E402
+
+# Schematic ear positions live in eegbench.montages, so the farthest-point
+# subsetting and the head maps draw from one table instead of two.
+from eegbench.montages import EAR_POSITIONS  # noqa: E402
 
 
 def _json_default(value):
@@ -358,14 +521,19 @@ def _parse_channels(value) -> list[str]:
 
 def _subset_label(track: str, subset: str, strategy: str) -> str:
     subset = str(subset)
+    if track in SUBSET_LABELS and subset in SUBSET_LABELS[track]:
+        return SUBSET_LABELS[track][subset]
     if track == "sleep_staging_local":
         return {
             "scalp_6_k6": "Scalp 6 ch",
             "ear_6_k6": "Ear 6 ch",
-            "ear_13_k14": "Ear all 14 ch",
+            "ear_14_k14": "Ear all 14 ch",
         }.get(subset, subset.replace("_", " "))
     if strategy == "full" or subset.startswith("full"):
         return "Full cap"
+    if subset.startswith("nested_k"):
+        # A hand-fixed reduction path, not a geometric spread.
+        return f"Nested {subset.split('_k', 1)[1]} ch"
     if subset.startswith("region-"):
         region = subset.split("_", 1)[0].replace("region-", "")
         return f"{REGION_LABELS.get(region, region.title())} region"
@@ -384,6 +552,7 @@ def _strategy_label(strategy: str) -> str:
         "full": "Full cap",
         "region": "Region",
         "distributed": "Max spread",
+        "nested": "Nested path",
         "random": "Random",
         "wearable": "Wearable",
     }.get(strategy, str(strategy).title())
@@ -403,7 +572,16 @@ def _load_results() -> pd.DataFrame:
         frames.append(df)
     if not frames:
         raise FileNotFoundError(f"no result CSVs in {RESULTS}")
-    return pd.concat(frames, ignore_index=True)
+    raw = pd.concat(frames, ignore_index=True)
+
+    # A task scored at several decision windows has one row per subject per
+    # window. The site's tables show one number per cell, so they use the task's
+    # headline window; the full curve stays in the CSV and in REPORT.md.
+    for track, seconds in HEADLINE_WINDOW_S.items():
+        if "trial_seconds" in raw.columns:
+            drop = (raw["track"] == track) & (raw["trial_seconds"] != seconds)
+            raw = raw[~drop]
+    return raw
 
 
 def _summary(raw: pd.DataFrame) -> pd.DataFrame:
@@ -496,8 +674,9 @@ def _controls() -> list[dict]:
     """One permutation-control row per live track.
 
     ``perm_control_ear_s1.csv`` duplicates subject 1 of the motor track, so it
-    is skipped rather than double-counted. Sleep has three montage rows; they
-    are collapsed into one control story for the track.
+    is skipped rather than double-counted. Sleep is controlled per night and per
+    montage (3 x 9 rows); those are collapsed into one control story for the
+    track, which is what the site's single control chart needs.
     """
     rows = []
     for path in sorted((ROOT / "results").glob("perm_control_*.csv")):
@@ -509,9 +688,21 @@ def _controls() -> list[dict]:
                 continue
             metric = str(g["metric"].iloc[0]) if "metric" in g.columns else "roc_auc"
             n_classes = int(g["n_classes"].iloc[0]) if "n_classes" in g.columns else 2
-            chance = 0.5 if metric == "roc_auc" else (1.0 / n_classes)
+            # kappa's chance level is 0, not 1/n. Getting this wrong made the
+            # sleep control look like it had a chance line at 0.20.
+            chance = (
+                0.5 if metric == "roc_auc"
+                else 0.0 if metric == "kappa"
+                else 1.0 / max(n_classes, 1)
+            )
+            subset_label = (
+                str(g["subset"].iloc[0]) if "subset" in g.columns else "full"
+            )
+            if track == "sleep_staging_local":
+                subset_label = "scalp + ear (3 montages × 9 nights)"
             rows.append({
                 "track": track,
+                "subset": subset_label,
                 "metric": metric,
                 "chance": chance,
                 "real": _clean_float(g["real"].mean()),
@@ -519,6 +710,11 @@ def _controls() -> list[dict]:
                 "perm_sd": _clean_float(g["perm_sd"].mean()),
                 "gap": _clean_float(g["gap"].mean()),
                 "n_controls": int(len(g)),
+                "n_subjects": int(g["subject"].nunique()) if "subject" in g.columns else 1,
+                "n_permutations": (
+                    int(g["n_permutations"].iloc[0])
+                    if "n_permutations" in g.columns else None
+                ),
             })
 
     frame = pd.DataFrame(rows)
@@ -528,6 +724,7 @@ def _controls() -> list[dict]:
     for track, g in frame.groupby("track"):
         out.append({
             "track": track,
+            "subset": g["subset"].iloc[0],
             "metric": g["metric"].iloc[0],
             "chance": _clean_float(g["chance"].mean()),
             "real": _clean_float(g["real"].mean()),
@@ -535,6 +732,11 @@ def _controls() -> list[dict]:
             "perm_sd": _clean_float(g["perm_sd"].mean()),
             "gap": _clean_float(g["gap"].mean()),
             "n_controls": int(g["n_controls"].sum()),
+            "n_subjects": int(g["n_subjects"].max()),
+            "n_permutations": (
+                int(g["n_permutations"].max())
+                if g["n_permutations"].notna().any() else None
+            ),
         })
     return sorted(out, key=lambda r: r["track"])
 
@@ -568,25 +770,43 @@ def main() -> int:
         if sub.empty:
             task["stats"] = None
             continue
-        full = sub[sub["strategy"] == "full"]
-        if not full.empty:
-            ref = full.iloc[0]
-            ref_label = "Full cap"
+        # Reference row for the headline stat. A task can name it explicitly
+        # (auditory attention compares against a matched-k scalp subset, not the
+        # full 29-electrode cap), otherwise the full montage is the reference
+        # and a dataset with no dense cap falls back to its matched scalp set.
+        ref_subset = task.get("referenceSubset")
+        if ref_subset:
+            ref_rows = sub[sub["subset"] == ref_subset]
+            if ref_rows.empty:
+                task["stats"] = None
+                continue
+            ref = ref_rows.iloc[0]
+            ref_label = task.get("referenceLabel") or _subset_label(
+                task["id"], ref_subset, ref["strategy"])
         else:
-            ref = sub[sub["subset"] == "scalp_6_k6"].iloc[0]
-            ref_label = "Scalp 6 ch"
-        reduced = sub[
-            (sub["strategy"].isin(["region", "distributed", "wearable"])) &
-            (sub["k"] <= (14 if task["id"] == "sleep_staging_local" else 8))
-        ]
-        if task["id"] == "sleep_staging_local":
-            # The headline compares like with like: 6 ear vs 6 scalp.
-            # ear_13 is reported separately, not used as the "best" montage.
-            reduced = reduced[reduced["subset"] == "ear_6_k6"]
-        if reduced.empty:
-            best = None
+            full = sub[sub["strategy"] == "full"]
+            if not full.empty:
+                ref = full.iloc[0]
+                ref_label = task.get("referenceLabel") or "Full cap"
+            else:
+                ref = sub[sub["subset"] == "scalp_6_k6"].iloc[0]
+                ref_label = task.get("referenceLabel") or "Scalp 6 ch"
+
+        headline_subset = task.get("headlineSubset")
+        if headline_subset:
+            rows = sub[sub["subset"] == headline_subset]
+            best = rows.iloc[0] if not rows.empty else None
         else:
-            best = reduced.loc[reduced["score"].idxmax()]
+            reduced = sub[
+                (sub["strategy"].isin(["region", "distributed", "wearable"])) &
+                (sub["k"] <= (14 if task["id"] == "sleep_staging_local" else 8))
+            ]
+            if task["id"] == "sleep_staging_local":
+                # The headline compares like with like: 6 ear vs 6 scalp.
+                # The all-14-ear montage is reported separately, not used as the
+                # "best" montage.
+                reduced = reduced[reduced["subset"] == "ear_6_k6"]
+            best = None if reduced.empty else reduced.loc[reduced["score"].idxmax()]
         def _itr(score):
             if task["metric"] != "accuracy" or not task.get("nClasses"):
                 return None
@@ -596,11 +816,13 @@ def main() -> int:
             ))
 
         task["stats"] = {
-            "reference": _clean_float(ref["score"]),
+            # Six decimals: these are printed to three, and a value that lands
+            # on a rounding boundary (0.8715) must not print as 0.872.
+            "reference": _clean_float(ref["score"], 6),
             "referenceLabel": ref_label,
             "referenceK": int(ref["k"]),
             "referenceItr": _itr(ref["score"]),
-            "best": _clean_float(best["score"]) if best is not None else None,
+            "best": _clean_float(best["score"], 6) if best is not None else None,
             "bestLabel": _subset_label(
                 task["id"], best["subset"], best["strategy"]
             ) if best is not None else None,
@@ -634,13 +856,14 @@ def main() -> int:
             "track": "motor_execution_ear_vs_scalp",
             "title": "Same eight channels, same session",
             "left": "Sensorimotor scalp",
-            "leftScore": _clean_float(sens["score"]),
+            "leftScore": _clean_float(sens["score"], 6),
             "right": "In-ear",
-            "rightScore": _clean_float(ear["score"]),
-            "delta": _clean_float(ear["score"] - sens["score"]),
+            "rightScore": _clean_float(ear["score"], 6),
+            "delta": _clean_float(ear["score"] - sens["score"], 6),
             "metricLabel": "ROC-AUC",
-            "note": "The ear is at chance. This is the strongest site-vs-count "
-                    "comparison in the benchmark.",
+            "note": "Negative in 6/6 subjects; paired 95% CI "
+                    "[−0.378, −0.173] AUC. Same session, same eight channels, "
+                    "same decoder.",
         })
     ear6 = _cell("sleep_staging_local", "within_session",
                  "bandpower_lda", "ear_6_k6")
@@ -649,15 +872,15 @@ def main() -> int:
     if ear6 is not None and scalp6 is not None:
         comparisons.append({
             "track": "sleep_staging_local",
-            "title": "Matched six channels, five nights",
+            "title": "Matched six channels, nine nights",
             "left": "Scalp",
-            "leftScore": _clean_float(scalp6["score"]),
+            "leftScore": _clean_float(scalp6["score"], 6),
             "right": "Ear",
-            "rightScore": _clean_float(ear6["score"]),
-            "delta": _clean_float(ear6["score"] - scalp6["score"]),
+            "rightScore": _clean_float(ear6["score"], 6),
+            "delta": _clean_float(ear6["score"] - scalp6["score"], 6),
             "metricLabel": "Cohen’s κ",
-            "note": "Negative in 5/5 nights; paired 95% CI "
-                    "[−0.075, −0.016] κ.",
+            "note": "Negative in 9/9 nights; paired 95% CI "
+                    "[−0.104, −0.009] κ.",
         })
 
     # Rows for the explorer.
@@ -682,16 +905,16 @@ def main() -> int:
             "strategy": r["strategy"],
             "strategyLabel": _strategy_label(r["strategy"]),
             "k": int(r["k"]),
-            "score": _clean_float(r["score"]),
-            "sem": _clean_float(r["sem"]),
-            "sd": _clean_float(r["sd"]),
+            "score": _clean_float(r["score"], 6),
+            "sem": _clean_float(r["sem"], 6),
+            "sd": _clean_float(r["sd"], 6),
             "n": int(r["n"]) if pd.notna(r["n"]) else None,
             "chance": _clean_float(task["chance"]),
             "metric": task["metric"],
             "metricLabel": task["metricLabel"],
-            "delta": _clean_float(r["delta_vs_reference"]),
-            "referenceScore": _clean_float(r["reference_score"]),
-            "itr": _clean_float(itr),
+            "delta": _clean_float(r["delta_vs_reference"], 6),
+            "referenceScore": _clean_float(r["reference_score"], 6),
+            "itr": _clean_float(itr, 6),
             "fidelity": r.get("fidelity") if pd.notna(r.get("fidelity")) else None,
             "channels": channels,
             "isFull": r["strategy"] == "full",
@@ -709,9 +932,9 @@ def main() -> int:
             "protocol": protocol,
             "pipeline": pipeline,
             "k": int(k),
-            "mean": _clean_float(g["score"].mean()),
-            "min": _clean_float(g["score"].min()),
-            "max": _clean_float(g["score"].max()),
+            "mean": _clean_float(g["score"].mean(), 6),
+            "min": _clean_float(g["score"].min(), 6),
+            "max": _clean_float(g["score"].max(), 6),
             "nSeeds": int(len(g)),
         })
 
@@ -728,7 +951,7 @@ def main() -> int:
             "nTasks": len(TASKS),
             "nExamples": sum(t["examples"] for t in TASKS),
             "nRows": len(rows),
-            "nSources": 6,
+            "nSources": len({t["dataset"] for t in TASKS}),
         },
         "tasks": TASKS,
         "rows": rows,
