@@ -1,12 +1,16 @@
 # The Electrode Budget — GitHub Pages site
 
-The benchmark publishes two static pages under `docs/`, with no build step on
+The benchmark publishes one static page under `docs/`, with no build step on
 the server and no runtime dependency beyond the files in this repository:
 
 | URL | Page | Source |
 |---|---|---|
 | `/` | **Summary page** — the question, four findings, three figures, two tables | `paper/paper.html` + generated numbers |
-| `/explore/` | **Interactive explorer** — every montage, per-decoder, head maps | `docs/explore/index.html` + `assets/app.js` |
+
+The interactive explorer was removed once the summary page carried the same
+findings: it described an earlier five-task benchmark and argued a weaker
+thesis than the page. Every montage, decoder and random subset it showed is
+still in `docs/data/benchmark.json`, linked from the page and the footer.
 
 `.nojekyll` is present so GitHub serves the JSON, PNG and PDF files unchanged.
 
@@ -14,20 +18,17 @@ the server and no runtime dependency beyond the files in this repository:
 
 ```powershell
 .\.venv\Scripts\python.exe -m http.server 8000 --directory docs
-# open http://localhost:8000          (paper page)
-# open http://localhost:8000/explore/ (interactive explorer)
+# open http://localhost:8000
 ```
 
-Both pages need an HTTP server (they read JSON). Opening the HTML files
-directly will not work because browsers block `fetch()` on `file://`.
+The page needs an HTTP server only if you are testing the JSON download links;
+the page itself is static HTML and opens fine from `file://`.
 
-Explorer query parameters while editing:
+Page query parameters:
 
 ```
-?static=1          reveal all sections (good for screenshots/printing)
 ?theme=light       force the light theme
 ?theme=dark        force the dark theme
-?task=ssvep_8ch    open a specific task in the explorer
 &view=delta        open the delta-vs-reference view
 &metric=itr        show SSVEP bits/min instead of accuracy
 ```
@@ -74,10 +75,8 @@ generator carries the citation, and the build does not cross-check them. Re-run
 ```
 docs/
 ├── index.html                    the summary page (generated)
-├── explore/index.html            the interactive explorer (hand-written)
 ├── assets/
-│   ├── paper.css, paper.js       paper-page styles and interactions
-│   ├── styles.css, app.js        explorer styles and charts
+│   ├── paper.css, paper.js       page styles and interactions
 │   ├── favicon.svg
 │   └── figures/                  paper figures: PNG (page) + PDF (vector)
 ├── data/
@@ -96,8 +95,8 @@ about where the electrodes sit rather than how many there are.* It carries three
 figures (the headline, the placement result, the paired wearable comparison) and
 two tables (the nine tasks, and the confound/reproduction checks). Everything
 else — per-montage tables, per-decoder comparisons, the channel-budget curves,
-the full permutation-control table — lives in `results/REPORT.md` and the
-explorer, which the page links to.
+the full permutation-control table — lives in `results/REPORT.md` and
+`docs/data/benchmark.json`, both reachable from the page.
 
 `paper/paper_full.html` is the long-form version the summary was cut from: design,
 per-task results, validity, discussion and limitations. It is **not built** and
@@ -106,10 +105,8 @@ its inline numbers are frozen at the moment it was archived. To publish it, poin
 path; the placeholders and tables are unchanged.
 
 Nothing on the paper page is hand-transcribed: its tables, figures and inline
-statistics are written by the generators from `results/benchmark/`. The explorer
-page is hand-written HTML around a generated data bundle, and its prose quotes a
-few numbers directly (for example the P300 interval in `docs/assets/app.js`).
-Those are checked against the bundle whenever the prose changes, so the
+statistics are written by the generators from `results/benchmark/`. Those are
+checked against the bundle whenever the prose changes, so the
 generated pages and `results/REPORT.md` are authoritative if the two disagree.
 
 ```powershell
@@ -125,7 +122,7 @@ generated pages and `results/REPORT.md` are authoritative if the two disagree.
 # 4. paper page: docs/index.html  (reads paper/paper.html + the bundle + the CSVs)
 .\.venv\Scripts\python.exe scripts\build_paper.py
 
-# 5. optional: real EEG illustrations for the explorer
+# 5. optional: real EEG illustrations for the data bundle
 .\.venv\Scripts\python.exe scripts\build_site_signals.py
 ```
 
@@ -171,10 +168,9 @@ so the figures rebuild without the raw multi-gigabyte datasets.
   white. Readers can switch with the sun/moon button in the header (remembered in
   `localStorage` under `eegbench-paper-theme`), or open it directly dark with
   `?theme=dark`. The theme is resolved by a small inline script in
-  `paper/paper.html` before first paint, so there is no flash. The explorer keeps
-  its own toggle and follows the system preference on a first visit.
-- **Colours** live as CSS variables at the top of `docs/assets/paper.css` and
-  `docs/assets/styles.css`. The matplotlib palette is in
+  `paper/paper.html` before first paint, so there is no flash.
+- **Colours** live as CSS variables at the top of `docs/assets/paper.css`. The
+  matplotlib palette is in
   `figures/figure_style.py` (`PALETTE`, `COLORS`), so figures and page follow the
   same semantics: blue = reference/full cap, green = sensorimotor, red = in-ear
   and ear, neutral = random subsets.

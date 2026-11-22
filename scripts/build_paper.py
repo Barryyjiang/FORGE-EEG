@@ -291,15 +291,46 @@ def table_tasks(numbers: dict[str, TaskNumbers]) -> str:
     )
 
 
+def _workload_recording_line() -> str:
+    """Recording-level balanced accuracies for the workload montages.
+
+    The STEW literature and the team's independent reimplementation average the
+    4 s window probabilities into one call per 150 s recording and score balanced
+    accuracy. That aggregation ranks the two four-electrode sets differently from
+    the window-level AUC the rest of the table uses, so both are shown.
+    """
+    path = pd_.ROOT / "results/benchmark/stew_workload_14ch__cross_subject.csv"
+    if not path.exists():
+        return ""
+    df = pd.read_csv(path)
+    df = df[df["protocol"] == "cross_subject"]
+    wanted = (
+        ("full_14_k14", "full\u00a014"),
+        ("glasses_4_k4", "glasses-4"),
+        ("posterior_4_k4", "posterior-4"),
+    )
+    parts = []
+    for subset, label in wanted:
+        sel = df[df["subset"] == subset]["recording_accuracy"]
+        if sel.empty:
+            return ""
+        parts.append(f"{label}&nbsp;{sel.mean() * 100:.1f}%")
+    return "recording-level: " + " / ".join(parts)
+
+
 def table_results(numbers: dict[str, TaskNumbers]) -> str:
     rows = []
+    workload_line = _workload_recording_line()
     for track in TASK_ORDER:
         tn = numbers[track]
         f = tn.fields
         sign_class = "delta-neg" if tn.paired.delta < 0 else "delta-pos"
+        task_cell = f"<strong>{f['short']}</strong>"
+        if track == "stew_workload_14ch" and workload_line:
+            task_cell += f"<br><span class='small'>{workload_line}</span>"
         rows.append(
             [
-                f"<strong>{f['short']}</strong>",
+                task_cell,
                 f"{f['reference']}<br><span class='small'>{f['referenceLabel']}, k={f['referenceK']}</span>",
                 f"{f['best']}<br><span class='small'>{f['bestLabel']}, k={f['bestK']}</span>",
                 f"<strong>{f['retainedPct1']}%</strong>",
@@ -312,7 +343,12 @@ def table_results(numbers: dict[str, TaskNumbers]) -> str:
         table_label("RESULTS") + "Headline result per task: the best reduced "
         "montage against that task's reference, at the task's standard decoder. "
         "Deltas are paired on the same subject (or subject-session) with 95% paired "
-        "<em>t</em> intervals recomputed from <code>results/benchmark/</code>.",
+        "<em>t</em> intervals recomputed from <code>results/benchmark/</code>. "
+        "Scores are one decision per trial or per <em>n</em>-second window. "
+        "Workload also shows its recording-level balanced accuracies, the "
+        "aggregation the STEW literature and the team's independent "
+        "reimplementation report; the two levels rank the two four-electrode sets "
+        "differently.",
         ["Task", "Reference", "Best reduced montage", "Retained", "Paired Δ [95% CI]", "Agreement"],
         rows,
         aligns=["left", "left", "left", "num", "num", "left"],
@@ -780,7 +816,7 @@ def bibtex() -> str:
         f"  author       = {{{authors}}},\n"
         f"  year         = {{{year}}},\n"
         f"  howpublished = {{\\url{{{REPO_URL}}}}},\n"
-        f"  note         = {{Benchmark code, results and interactive explorer. "
+        f"  note         = {{Benchmark code and results. "
         f"{AFFILIATION}}}\n"
         "}"
     )

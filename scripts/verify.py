@@ -64,7 +64,7 @@ def main() -> int:
               f"{track}: a shuffled-label null reached {worst:.3f}, above 0.55")
 
     # --- the generated pages carry no unresolved placeholder --------------
-    for name in ("docs/index.html", "docs/explore/index.html"):
+    for name in ("docs/index.html",):
         path = ROOT / name
         check(path.exists(), f"{name}: missing (run the build scripts)")
         if not path.exists():

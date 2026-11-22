@@ -49,7 +49,6 @@
         <a href="#method">Method</a>
         <a href="#limits">Limits</a>
         <a href="#cite">Cite</a>
-        <a class="explore" href="explore/">Explorer&nbsp;↗</a>
       </nav>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch colour theme" title="Switch between light and dark">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
@@ -71,7 +70,6 @@
       <p class="affiliation">Northwestern University, Evanston, IL, USA</p>
 
       <nav class="paper-links" aria-label="Paper artefacts">
-        <a href="explore/">Interactive explorer</a>
         <a href="#cite">BibTeX</a>
         <a href="data/benchmark.json" download>Results data</a>
         <a href="{{repo}}">Code</a>
@@ -160,10 +158,13 @@
           </li>
           <li>
             <strong>Where to put them depends on the task.</strong> At four
-            electrodes, a frontal set is the best choice for cognitive workload
-            ({{rand:stew_glasses}}th percentile of random draws) and a poor one for
+            electrodes, a frontal set ranks high for cognitive workload
+            ({{rand:stew_glasses}}th percentile of random draws) and poorly for
             emotion ({{rand:faced_glasses}}th), where a posterior set wins
             ({{rand:faced_posterior}}th). There is no single "wearable montage".
+            One honest exception: for workload a posterior set wins once 4&nbsp;s
+            windows are averaged into a single call per recording, so "frontal is
+            best" holds only window by window.
           </li>
         </ol>
       </div>
@@ -300,9 +301,9 @@
           {{meta:nTasks}} tasks over {{meta:nSources}} public datasets,
           {{meta:nRows}} evaluated montage × decoder cells, {{meta:nExamples}} trials
           or windows. Every number on this page is written by the build from
-          <code>results/benchmark/</code>; nothing is transcribed by hand. The
-          <a href="explore/">interactive explorer</a> has every montage, every
-          decoder and every random subset, and
+          <code>results/benchmark/</code>; nothing is transcribed by hand.
+          Every montage, every decoder and every random subset is in
+          <a href="data/benchmark.json" download>one JSON file</a>, and
           <a href="{{repo}}">the repository</a> has the code that produced them.
         </p>
         <p class="small">
@@ -325,7 +326,6 @@
       </p>
       <p>
         <a href="#top">Top</a> ·
-        <a href="explore/">Explorer</a> ·
         <a href="data/benchmark.json">Data</a> ·
         <a href="{{repo}}">Code</a>
       </p>
