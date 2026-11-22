@@ -160,10 +160,13 @@
           </li>
           <li>
             <strong>Where to put them depends on the task.</strong> At four
-            electrodes, a frontal set is the best choice for cognitive workload
-            (90th percentile of random draws) and a poor one for
+            electrodes, a frontal set ranks high for cognitive workload
+            (90th percentile of random draws) and poorly for
             emotion (65th), where a posterior set wins
-            (80th). There is no single "wearable montage".
+            (80th). There is no single "wearable montage". One honest
+            exception: for workload a posterior set wins once 4&nbsp;s windows are
+            averaged into a single call per recording, so "frontal is best" holds
+            only window by window.
           </li>
         </ol>
       </div>
@@ -218,7 +221,7 @@
 
     <div class="table-wrap">
     <table>
-      <caption><span class='label'>Table 1.</span> Headline result per task: the best reduced montage against that task's reference, at the task's standard decoder. Deltas are paired on the same subject (or subject-session) with 95% paired <em>t</em> intervals recomputed from <code>results/benchmark/</code>.</caption>
+      <caption><span class='label'>Table 1.</span> Headline result per task: the best reduced montage against that task's reference, at the task's standard decoder. Deltas are paired on the same subject (or subject-session) with 95% paired <em>t</em> intervals recomputed from <code>results/benchmark/</code>. Scores are one decision per trial or per <em>n</em>-second window. Workload additionally shows its recording-level balanced accuracies (full&nbsp;14 / glasses-4 / posterior-4), the aggregation the STEW literature and the team's independent reimplementation report; the two levels rank the two four-electrode sets differently.</caption>
       <thead>
         <tr><th>Task</th><th>Reference</th><th>Best reduced montage</th><th class="num">Retained</th><th class="num">Paired Δ [95% CI]</th><th>Agreement</th></tr>
       </thead>
@@ -229,7 +232,7 @@
       <tr><td><strong>SSVEP</strong></td><td>0.928<br><span class='small'>Full cap, k=8</span></td><td>0.914<br><span class='small'>Max-spread subset, k=4</span></td><td class="num"><strong>98.5%</strong></td><td class="num"><span class='delta-neg'>−0.014</span><br><span class='small nowrap'>[−0.052, 0.024]</span></td><td>5/10 negative<br><span class='small'>n=10, p=0.429</span></td></tr>
       <tr><td><strong>Motor execution</strong></td><td>0.775<br><span class='small'>Full cap, k=115</span></td><td>0.739<br><span class='small'>Sensorimotor region, k=8</span></td><td class="num"><strong>95.4%</strong></td><td class="num"><span class='delta-neg'>−0.036</span><br><span class='small nowrap'>[−0.144, 0.073]</span></td><td>5/6 negative<br><span class='small'>n=6, p=0.438</span></td></tr>
       <tr><td><strong>Sleep staging</strong></td><td>0.418<br><span class='small'>Scalp 6 ch, k=6</span></td><td>0.362<br><span class='small'>Ear 6 ch, k=6</span></td><td class="num"><strong>86.5%</strong></td><td class="num"><span class='delta-neg'>−0.056</span><br><span class='small nowrap'>[−0.104, −0.009]</span></td><td>9/9 negative<br><span class='small'>n=9, p=0.026</span></td></tr>
-      <tr><td><strong>Cognitive workload</strong></td><td>0.874<br><span class='small'>Full 14 ch, k=14</span></td><td>0.844<br><span class='small'>Glasses-like 4 ch, k=4</span></td><td class="num"><strong>96.6%</strong></td><td class="num"><span class='delta-neg'>−0.030</span><br><span class='small nowrap'>[−0.059, −0.001]</span></td><td>30/48 negative<br><span class='small'>n=48, p=0.041</span></td></tr>
+      <tr><td><strong>Cognitive workload</strong><br><span class='small'>recording-level: 90.6% / 85.4% / 87.5%</span></td><td>0.874<br><span class='small'>Full 14 ch, k=14</span></td><td>0.844<br><span class='small'>Glasses-like 4 ch, k=4</span></td><td class="num"><strong>96.6%</strong></td><td class="num"><span class='delta-neg'>−0.030</span><br><span class='small nowrap'>[−0.059, −0.001]</span></td><td>30/48 negative<br><span class='small'>n=48, p=0.041</span></td></tr>
       <tr><td><strong>Auditory attention</strong></td><td>0.807<br><span class='small'>Scalp 12 ch, k=12</span></td><td>0.626<br><span class='small'>In-ear 12 ch, k=12</span></td><td class="num"><strong>77.5%</strong></td><td class="num"><span class='delta-neg'>−0.181</span><br><span class='small nowrap'>[−0.249, −0.114]</span></td><td>14/15 negative<br><span class='small'>n=15, p=0.000</span></td></tr>
       <tr><td><strong>Emotion recognition</strong></td><td>0.570<br><span class='small'>Full 30 ch, k=30</span></td><td>0.558<br><span class='small'>Posterior 4 ch, k=4</span></td><td class="num"><strong>97.9%</strong></td><td class="num"><span class='delta-neg'>−0.012</span><br><span class='small nowrap'>[−0.030, 0.006]</span></td><td>55/123 negative<br><span class='small'>n=123, p=0.186</span></td></tr>
       </tbody>
