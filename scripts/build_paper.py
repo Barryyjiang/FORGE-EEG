@@ -542,6 +542,25 @@ def table_checks(_numbers=None) -> str:
                 f"matches the full pipeline",
             ])
 
+    noise_path = ROOT / "results" / "noise_resilience_summary.json"
+    if noise_path.exists():
+        import json as _json
+
+        noise = _json.loads(noise_path.read_text())
+        if noise:
+            # Report the two extremes that carry the claim: the mildest and the
+            # strictest condition, both noise models.
+            pick = [r for r in noise if r["snr_db"] in (15.0, 0.0)]
+            for r in sorted(pick, key=lambda x: (-x["snr_db"], x["model"])):
+                rows.append([
+                    "Noise<br><span class='small'>matched SNR, k=8</span>",
+                    f"<strong>Wu 2020, {r['model']} noise</strong>",
+                    f"{r['gap_mean']:+.3f}",
+                    f"clean gap, Δ {r['delta']:+.3f} "
+                    f"[{r['ci_low']:+.3f}, {r['ci_high']:+.3f}] at {r['snr_db']:g} dB",
+                    "never widens",
+                ])
+
     if not rows:
         return ("<p class='small'>Confound and reproduction checks not generated. "
                 "Run <code>scripts/stew_drift_control.py</code> and "
@@ -822,6 +841,34 @@ def bibtex() -> str:
     )
 
 
+def noise_fields() -> dict[str, str]:
+    """Noise-resilience headline numbers, from the summary JSON.
+
+    The claim is a *stability* result: the ear-minus-scalp gap does not move
+    when both montages are degraded at matched SNR. The headline numbers are
+    therefore the largest paired shift observed and the number of subjects,
+    not a p-value from a single condition.
+    """
+    path = ROOT / "results" / "noise_resilience_summary.json"
+    if not path.exists():
+        return {}
+    import json as _json
+
+    rows = _json.loads(path.read_text())
+    if not rows:
+        return {}
+    biggest = max(rows, key=lambda r: abs(r["delta"]))
+    all_ci_include_zero = all(
+        r["ci_low"] <= 0.0 <= r["ci_high"] for r in rows
+    )
+    return {
+        "maxdelta": f"{abs(biggest['delta']):.3f}",
+        "n": str(int(rows[0]["n"])),
+        "allci": "yes" if all_ci_include_zero else "no",
+        "strictest": f"{min(r['snr_db'] for r in rows):g}",
+    }
+
+
 def curve_fields() -> dict[str, dict[int, float]]:
     """Accuracy against channel budget, from ``results/aad_channel_curve.csv``.
 
@@ -874,6 +921,7 @@ def resolve(template: str, numbers: dict[str, TaskNumbers]) -> str:
     pairs = named_pairs(numbers)
     curves = curve_fields()
     randoms = random_percentiles()
+    noise_stats = noise_fields()
     _TABLE_INDEX.clear()
     _TABLE_INDEX.update(table_order(template))
     unknown: list[str] = []
@@ -939,6 +987,12 @@ def resolve(template: str, numbers: dict[str, TaskNumbers]) -> str:
                 unknown.append(token)
                 return match.group(0)
             return randoms[key]
+        if token.startswith("noise:"):
+            key = token.split(":", 1)[1]
+            if key not in noise_stats:
+                unknown.append(token)
+                return match.group(0)
+            return noise_stats[key]
         unknown.append(token)
         return match.group(0)
 

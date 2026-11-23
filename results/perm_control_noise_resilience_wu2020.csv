@@ -1,0 +1,13 @@
+track,subset,pipeline,subject,protocol,snr_db,real,perm_mean,gap
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,001,within_session,,0.8587499999999999,0.5069305555555554,0.35181944444444446
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,001,within_session,0,0.7184722222222223,0.4917569444444445,0.22671527777777778
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,002,within_session,,0.8009375,0.47006249999999994,0.33087500000000003
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,002,within_session,0,0.72125,0.46813281249999994,0.2531171875
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,003,within_session,,0.7257812499999999,0.516234375,0.2095468749999999
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,003,within_session,0,0.5901562499999999,0.5121171875,0.07803906249999992
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,004,within_session,,0.510625,0.4836875,0.026937500000000003
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,004,within_session,0,0.48375,0.48865625,-0.004906250000000001
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,005,within_session,,0.8967053838848711,0.5037146614069691,0.392990722477902
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,005,within_session,0,0.8313974724231133,0.4919460880999342,0.3394513843231792
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,006,within_session,,0.6760416666666668,0.5307256944444444,0.14531597222222237
+noise_resilience_wu2020,scalp_8ch,riemann_tslr,006,within_session,0,0.5836111111111111,0.5224375,0.06117361111111108
